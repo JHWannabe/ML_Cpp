@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="config">
+      <UniqueIdentifier>{acaca53d-e9eb-4f01-9035-813dc4e64364}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{4485d390-0a40-4fe7-ab18-da2d0348c7af}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="config\segmentation.ini">
+      <Filter>config</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="utils\dataloader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\datasets.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\Logger.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\losses.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\progress.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\transforms.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\visualizer.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="loss.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="networks.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="test.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="train.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="valid.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="utils\dataloader.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\datasets.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Logger.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\losses.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\progress.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\transforms.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\visualizer.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="loss.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="networks.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
