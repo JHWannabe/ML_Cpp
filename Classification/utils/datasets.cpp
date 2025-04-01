@@ -465,16 +465,16 @@ size_t datasets::ImageFolderSegmentWithPaths::size(){
 // -------------------------------------------------------------------------
 // namespace{datasets} -> class{ImageFolderClassesWithPaths} -> constructor
 // -------------------------------------------------------------------------
-datasets::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(const std::string root, std::vector<transforms_Compose> &transform_, const std::vector<std::string> class_names){
-    
+datasets::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(const std::string root, std::vector<transforms_Compose>& transform_, const std::vector<std::string> class_names) {
+
     std::string class_name, class_root;
-    
-    for (size_t i = 0; i < class_names.size(); i++){
-        
+
+    for (size_t i = 0; i < class_names.size(); i++) {
+
         std::vector<std::string> paths_tmp, fnames_tmp;
         class_name = class_names.at(i);
         class_root = root + '/' + class_name;
-        
+
         datasets::collect(class_root, class_name + '/', paths_tmp, fnames_tmp);
         std::sort(paths_tmp.begin(), paths_tmp.end());
         std::sort(fnames_tmp.begin(), fnames_tmp.end());

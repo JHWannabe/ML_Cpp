@@ -1,3 +1,11 @@
+#pragma once
+
+#ifdef OBJECTDETECTION_EXPORTS
+#define OBJECTDETECTION_DECLSPEC __declspec(dllexport)
+#else
+#define OBJECTDETECTION_DECLSPEC __declspec(dllimport)
+#endif
+
 #ifndef NETWORKS_HPP
 #define NETWORKS_HPP
 

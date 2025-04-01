@@ -14,66 +14,34 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="utils">
-      <UniqueIdentifier>{7a0924fc-9388-4fef-8559-55ac6b48fccc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="config">
-      <UniqueIdentifier>{7f2df76e-c45b-4104-a373-2495e7ff7804}</UniqueIdentifier>
+      <UniqueIdentifier>{1e8654dc-60ae-4885-ba2d-791a871dd001}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="utils\dataloader.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\datasets.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\Logger.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\losses.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\progress.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\transforms.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\visualizer.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="augmentation.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="demo.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="detect.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="detector.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="loss.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="networks.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="test.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="train.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="valid.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="augmentation.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="detector.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="loss.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="networks.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="object_detection.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="utils\dataloader.hpp">
       <Filter>utils</Filter>
     </ClInclude>
@@ -95,33 +63,49 @@
     <ClInclude Include="utils\visualizer.hpp">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="augmentation.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="detector.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="loss.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ini.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="networks.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="config\anchor.txt">
-      <Filter>config</Filter>
-    </Text>
-    <Text Include="config\resize.txt">
-      <Filter>config</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="config\object_detection.ini">
-      <Filter>config</Filter>
-    </None>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="object_detection.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="augmentation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="detector.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="loss.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="networks.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\dataloader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\datasets.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\Logger.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\losses.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\progress.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\transforms.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\visualizer.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

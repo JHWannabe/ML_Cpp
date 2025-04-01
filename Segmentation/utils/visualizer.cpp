@@ -168,21 +168,44 @@ void visualizer::save_label(const torch::Tensor label, const std::string path, c
     height_out = height * nrow + padding * (nrow + 1);
 
     // (4) Palette and Value Initialization for Index Image
+    //output = png::image<png::index_pixel>(width_out, height_out);
+    //pal = png::palette(label_palette.size());
+    //for (i = 0; i < pal.size(); i++) {
+    //    pal_one = label_palette.at(i);
+    //    R = std::get<0>(pal_one);
+    //    G = std::get<1>(pal_one);
+    //    B = std::get<2>(pal_one);
+    //    pal[i] = png::color(R, G, B);
+    //}
+    //output.set_palette(pal);
+    //for (j = 0; j < height_out; j++) {
+    //    for (i = 0; i < width_out; i++) {
+    //        output[j][i] = 0;
+    //    }
+    //}
+    
+    // (4) Palette and Value Initialization for Index Image
     output = png::image<png::index_pixel>(width_out, height_out);
-    pal = png::palette(label_palette.size());
-    for (i = 0; i < pal.size(); i++) {
-        pal_one = label_palette.at(i);
-        R = std::get<0>(pal_one);
-        G = std::get<1>(pal_one);
-        B = std::get<2>(pal_one);
-        pal[i] = png::color(R, G, B);
+
+    // 팔레트 크기를 256으로 고정
+    pal = png::palette(256);
+
+    // label_palette의 색상을 pal에 복사
+    for (size_t i = 0; i < label_palette.size(); i++) {
+        pal[i] = png::color(
+            std::get<0>(label_palette.at(i)),
+            std::get<1>(label_palette.at(i)),
+            std::get<2>(label_palette.at(i))
+        );
     }
+
+    // 남은 슬롯을 기본 색상(검은색)으로 채우기
+    for (size_t i = label_palette.size(); i < 256; i++) {
+        pal[i] = png::color(0, 0, 0);  // 검은색
+    }
+
     output.set_palette(pal);
-    for (j = 0; j < height_out; j++) {
-        for (i = 0; i < width_out; i++) {
-            output[j][i] = 0;
-        }
-    }
+
 
     // (5) Value Substitution for Output Image
     for (k = 0; k < mini_batch_size; k++) {
@@ -198,6 +221,7 @@ void visualizer::save_label(const torch::Tensor label, const std::string path, c
 
     // (6) Image Output
     output.write(path);
+
 
     // End Processing
     return;

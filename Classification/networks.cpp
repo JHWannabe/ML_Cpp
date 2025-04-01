@@ -15,81 +15,6 @@ namespace F = torch::nn::functional;
 // ----------------------------------------------------------------------
 // struct{MC_ResNetImpl}(nn::Module) -> constructor
 // ----------------------------------------------------------------------
-MC_ResNetImpl::MC_ResNetImpl(po::variables_map& vm) {
-    bool basic_block;
-    std::vector<long int> cfg;
-    size_t n_layers = vm["n_layers"].as<size_t>();
-    if (n_layers == 18) {
-        basic_block = true;
-        cfg = { 2, 2, 2, 2 };
-    }
-    else if (n_layers == 34) {
-        basic_block = true;
-        cfg = { 3, 4, 6, 3 };
-    }
-    else if (n_layers == 50) {
-        basic_block = false;
-        cfg = { 3, 4, 6, 3 };
-    }
-    else if (n_layers == 101) {
-        basic_block = false;
-        cfg = { 3, 4, 23, 3 };
-    }
-    else if (n_layers == 152) {
-        basic_block = false;
-        cfg = { 3, 8, 36, 3 };
-    }
-    else {
-        std::cerr << "Error : The number of layers is " << n_layers << '.' << std::endl;
-        std::cerr << "Error : Please choose 18, 34, 50, 101 or 152." << std::endl;
-        std::exit(1);
-    }
-    size_t feature = vm["nf"].as<size_t>();
-    this->inplanes = vm["nf"].as<size_t>();
-
-    // First Downsampling
-    this->first = nn::Sequential(
-        nn::Conv2d(nn::Conv2dOptions(/*in_channels=*/vm["nc"].as<size_t>(), /*out_channels=*/this->inplanes, /*kernel_size=*/7).stride(2).padding(3).bias(false)),  // {C,224,224} ===> {F,112,112}
-        nn::BatchNorm2d(this->inplanes),
-        nn::ReLU(nn::ReLUOptions().inplace(true)),
-        nn::MaxPool2d(nn::MaxPool2dOptions(/*kernel_size=*/3).stride(2).padding(1))                                                                                 // {F,112,112} ===> {F,56,56}
-    );
-    register_module("first", this->first);
-
-    // After the Second Time
-    size_t expansion;
-    if (basic_block) {
-        BasicBlockImpl block;
-        expansion = block.expansion;
-        this->layer1 = this->make_layers(block, feature, /*num_blocks=*/cfg.at(0), /*stride=*/1);    // {F,56,56} ===> {F*E,56,56}
-        this->layer2 = this->make_layers(block, feature * 2, /*num_blocks=*/cfg.at(1), /*stride=*/2);  // {F*E,56,56} ===> {2F*E,28,28}
-        this->layer3 = this->make_layers(block, feature * 4, /*num_blocks=*/cfg.at(2), /*stride=*/2);  // {2F*E,28,28} ===> {4F*E,14,14}
-        this->layer4 = this->make_layers(block, feature * 8, /*num_blocks=*/cfg.at(3), /*stride=*/2);  // {4F*E,14,14} ===> {8F*E,7,7}
-    }
-    else {
-        BottleneckImpl block;
-        expansion = block.expansion;
-        this->layer1 = this->make_layers(block, feature, /*num_blocks=*/cfg.at(0), /*stride=*/1);    // {F,56,56} ===> {F*E,56,56}
-        this->layer2 = this->make_layers(block, feature * 2, /*num_blocks=*/cfg.at(1), /*stride=*/2);  // {F*E,56,56} ===> {2F*E,28,28}
-        this->layer3 = this->make_layers(block, feature * 4, /*num_blocks=*/cfg.at(2), /*stride=*/2);  // {2F*E,28,28} ===> {4F*E,14,14}
-        this->layer4 = this->make_layers(block, feature * 8, /*num_blocks=*/cfg.at(3), /*stride=*/2);  // {4F*E,14,14} ===> {8F*E,7,7}
-    }
-    register_module("layer1", this->layer1);
-    register_module("layer2", this->layer2);
-    register_module("layer3", this->layer3);
-    register_module("layer4", this->layer4);
-
-    // Final Downsampling
-    this->avgpool = nn::Sequential(nn::AdaptiveAvgPool2d(nn::AdaptiveAvgPool2dOptions({ 1, 1 })));  // {8F*E,7,7} ===> {8F*E,1,1}
-    register_module("avgpool", this->avgpool);
-
-    // Classification
-    // this->classifier = nn::Sequential(nn::Linear(/*in_channels=*/feature * 8 * expansion, /*out_channels=*/vm["class_num"].as<size_t>()));  // {8F*E} ===> {CN}
-    this->classifier = nn::Linear(/*in_channels=*/feature * 8 * expansion, /*out_channels=*/vm["class_num"].as<size_t>());  // {8F*E} ===> {CN}
-    register_module("classifier", this->classifier);
-
-}
-
 MC_ResNetImpl::MC_ResNetImpl(mINI::INIStructure& ini) {
 
     bool basic_block;
@@ -347,4 +272,3 @@ void weights_init(nn::Module& m) {
     }
     return;
 }
-

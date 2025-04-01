@@ -15,26 +15,6 @@ bool stringToBool(const std::string& str);
 // ----------------------------------------------------------------------
 // struct{UNetImpl}(nn::Module) -> constructor
 // ----------------------------------------------------------------------
-UNetImpl::UNetImpl(po::variables_map &vm){
-    
-    size_t feature = vm["nf"].as<size_t>();
-    size_t num_downs = (size_t)(std::log2(vm["size"].as<size_t>()));
-    bool use_dropout = !vm["no_dropout"].as<bool>();
-
-    UNetBlockImpl blocks, fake;
-    blocks = UNetBlockImpl({feature*8, feature*8}, vm["nz"].as<size_t>(), /*submodule_=*/fake, /*outermost_=*/false, /*innermost=*/true);
-    for (size_t i = 0; i < num_downs - 5; i++){
-        blocks = UNetBlockImpl({feature*8, feature*8}, feature*8, /*submodule_=*/blocks, /*outermost_=*/false, /*innermost=*/false, /*use_dropout=*/use_dropout);
-    }
-    blocks = UNetBlockImpl({feature*4, feature*4}, feature*8, /*submodule_=*/blocks);
-    blocks = UNetBlockImpl({feature*2, feature*2}, feature*4, /*submodule_=*/blocks);
-    blocks = UNetBlockImpl({feature, feature}, feature*2, /*submodule_=*/blocks);
-    blocks = UNetBlockImpl({vm["nc"].as<size_t>(), vm["class_num"].as<size_t>()}, feature, /*submodule_=*/blocks, /*outermost_=*/true);
-    
-    this->model->push_back(blocks);
-    register_module("U-Net", this->model);
-
-}
 UNetImpl::UNetImpl(mINI::INIStructure& ini) {
 
     size_t feature = std::stol(ini["Network"]["nf"]);

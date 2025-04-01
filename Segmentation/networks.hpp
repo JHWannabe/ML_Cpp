@@ -24,7 +24,6 @@ private:
     nn::Sequential model;
 public:
     UNetImpl(){}
-    UNetImpl(po::variables_map &vm);
     UNetImpl(mINI::INIStructure& ini);
     torch::Tensor forward(torch::Tensor x);
 };

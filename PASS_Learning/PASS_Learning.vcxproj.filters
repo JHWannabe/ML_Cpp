@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{0bc51cf4-e330-454e-94ae-65eeafa63fb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="model">
+      <UniqueIdentifier>{7e17d21d-1c46-4e54-b1d2-f7808abe07dc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pass_learning.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\dataloader.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\datasets.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Logger.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\losses.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\progress.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\transforms.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\visualizer.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="model\networks.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\decoder.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Resnet.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\de_Resnet.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\scheduler.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pass_learning.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\dataloader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\datasets.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\Logger.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\losses.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\progress.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\transforms.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\visualizer.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\scheduler.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

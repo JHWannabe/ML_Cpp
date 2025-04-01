@@ -13,60 +13,26 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="config">
-      <UniqueIdentifier>{acaca53d-e9eb-4f01-9035-813dc4e64364}</UniqueIdentifier>
-    </Filter>
     <Filter Include="utils">
-      <UniqueIdentifier>{4485d390-0a40-4fe7-ab18-da2d0348c7af}</UniqueIdentifier>
+      <UniqueIdentifier>{d0d9da77-517c-4544-b1ed-0b9d39b7ff42}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="config\segmentation.ini">
-      <Filter>config</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="utils\dataloader.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\datasets.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\Logger.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\losses.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\progress.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\transforms.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\visualizer.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="loss.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="networks.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="test.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="train.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="valid.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="loss.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="networks.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="utils\dataloader.hpp">
       <Filter>utils</Filter>
     </ClInclude>
@@ -88,14 +54,46 @@
     <ClInclude Include="utils\visualizer.hpp">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="loss.hpp">
+    <ClInclude Include="segmentation.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="networks.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ini.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="loss.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="segmentation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="networks.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\dataloader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\datasets.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\Logger.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\losses.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\progress.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\transforms.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\visualizer.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

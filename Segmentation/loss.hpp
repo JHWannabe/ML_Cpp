@@ -8,6 +8,12 @@
 // -----------------------------------
 // class{Loss}
 // -----------------------------------
+class CEDiceLoss {
+public:
+    CEDiceLoss() {}
+    torch::Tensor operator()(torch::Tensor &pred, torch::Tensor &target);
+};
+
 class Loss{
 public:
     Loss(){}

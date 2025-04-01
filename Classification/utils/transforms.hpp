@@ -11,6 +11,12 @@
 #define CV_MAT false
 #define TORCH_TENSOR true
 
+#ifdef CLASSIFICATION_EXPORTS
+#define CLASSIFICATION_DECLSPEC __declspec(dllexport)
+#else
+#define CLASSIFICATION_DECLSPEC __declspec(dllimport)
+#endif
+
 
 // -----------------------
 // namespace{transforms}
@@ -96,7 +102,7 @@ namespace transforms {
         ResizeImpl() {}
         ResizeImpl(const cv::Size size_, const int interpolation_ = cv::INTER_LINEAR);
         bool type() override { return CV_MAT; }
-        void forward(cv::Mat& data_in, cv::Mat& data_out) override;
+        __declspec(dllexport) void forward(cv::Mat& data_in, cv::Mat& data_out) override;
     };
 
 
@@ -123,7 +129,7 @@ namespace transforms {
     public:
         ToTensorImpl() {}
         bool type() override { return TORCH_TENSOR; }
-        void forward(cv::Mat& data_in, torch::Tensor& data_out) override;
+        __declspec(dllexport) void forward(cv::Mat& data_in, torch::Tensor& data_out) override;
     };
 
 
@@ -203,7 +209,7 @@ namespace transforms {
         NormalizeImpl(const std::vector<float> mean_, const float std_);
         NormalizeImpl(const std::vector<float> mean_, const std::vector<float> std_);
         bool type() override { return TORCH_TENSOR; }
-        void forward(torch::Tensor& data_in, torch::Tensor& data_out) override;
+        __declspec(dllexport) void forward(torch::Tensor& data_in, torch::Tensor& data_out) override;
     };
 
 

@@ -1,4 +1,4 @@
-aeroplane
+airplane
 bicycle
 bird
 boat
@@ -8,13 +8,13 @@ car
 cat
 chair
 cow
-diningtable
+table
 dog
 horse
-motorbike
+bike
 person
-pottedplant
+plant
 sheep
 sofa
 train
-tvmonitor
+tv
