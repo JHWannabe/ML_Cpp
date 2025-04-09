@@ -8,10 +8,10 @@ public:
     CosineAnnealingWarmupRestarts(
         torch::optim::Optimizer& optimizer,
         int first_cycle_steps,
-        double cycle_mult = 1.0,
         double max_lr = 0.1,
         double min_lr = 0.001,
         int warmup_steps = 0,
+        double cycle_mult = 1.0,
         double gamma = 1.0,
         int last_epoch = -1)
         : optimizer(optimizer),

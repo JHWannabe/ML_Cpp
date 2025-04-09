@@ -72,6 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>D:\DLL_Porting\$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>C:\Users\JHCHUN\AppData\Local\Programs\Python\Python311\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\JHCHUN\AppData\Local\Programs\Python\Python311\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,7 +118,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\cuda\include;C:\libtorch\include\torch\csrc\api\include;C:\libtorch\include;C:\vcpkg\installed\x64-windows\include;C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\cuda\include;C:\libtorch\include\torch\csrc\api\include;C:\libtorch\include;C:\vcpkg\installed\x64-windows\include;C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;4251;4244;4267;4275;4819;4624;4305;4715</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -124,10 +126,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>C:\boost\stage\lib;C:\vcpkg\installed\x64-windows\lib;C:\libtorch\lib;C:\opencv\build\x64\vc16\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world4100.lib;opencv_world4100d.lib;c10.lib;c10_cuda.lib;torch.lib;torch_cpu.lib;torch_cuda.lib;caffe2_nvrtc.lib;C:\cuda\lib\x64\cublas.lib;C:\cuda\lib\x64\cudart.lib;C:\cuda\lib\x64\cufft.lib;C:\cuda\lib\x64\curand.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>python311.lib;opencv_world4100.lib;opencv_world4100d.lib;c10.lib;c10_cuda.lib;torch.lib;torch_cpu.lib;torch_cuda.lib;caffe2_nvrtc.lib;C:\cuda\lib\x64\cublas.lib;C:\cuda\lib\x64\cudart.lib;C:\cuda\lib\x64\cufft.lib;C:\cuda\lib\x64\curand.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalOptions>/INCLUDE:"?ignore_this_library_placeholder@@YAHXZ" %(AdditionalOptions)</AdditionalOptions>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -160,6 +162,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils\dataloader.hpp" />
     <ClInclude Include="utils\datasets.hpp" />
+    <ClInclude Include="utils\fastNoiseLite.h" />
     <ClInclude Include="utils\Logger.h" />
     <ClInclude Include="utils\losses.hpp" />
     <ClInclude Include="utils\progress.hpp" />

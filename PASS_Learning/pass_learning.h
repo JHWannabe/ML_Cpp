@@ -49,6 +49,21 @@ void Set_Model_Params(mINI::INIStructure& ini, std::shared_ptr<Supervised>& mode
 void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode);
 bool stringToBool(const std::string& str);
 
-void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& transform);
-void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& transform);
+void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform);
+void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform);
 void valid(mINI::INIStructure& ini, DataLoader::SegmentImageWithPaths& valid_dataloader, torch::Device& device, Loss& criterion, std::shared_ptr<Supervised>& model, const size_t epoch, visualizer::graph& writer);
+
+struct Metrics {
+	double recall;
+	double precision;
+	double f1_score;
+	int FN;
+};
+
+int count_images_in_label_folder(const std::string& base_path);
+Metrics compute_metrics_from_confusion_matrix(const std::vector<std::vector<int>>& cm);
+std::vector<std::vector<int>> compute_confusion_matrix_from_dirs(
+	const std::string& goodPath,
+	const std::string& ngPath,
+	const std::string& overkillPath,
+	const std::string& notfoundPath);

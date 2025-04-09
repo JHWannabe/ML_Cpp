@@ -8,15 +8,14 @@
 namespace nn = torch::nn;
 namespace F = nn::functional;
 
-// -------------------
-// class{Loss}
-// -------------------
+ //-------------------
+ //class{Loss}
+ //-------------------
 class Loss {
 public:
     Loss() {}
-    torch::Tensor operator()(torch::Tensor& input, torch::Tensor& target, float dice_weight = 0.5, float focal_weight = 0.5);
-    torch::Tensor l1_loss(torch::Tensor input, torch::Tensor target);
-    torch::Tensor dice_loss(torch::Tensor input, torch::Tensor target, bool multiclass = false);
+    torch::Tensor operator()(torch::Tensor& output, torch::Tensor& target, float l1_weight = 0.6, float focal_weight = 0.4);
+    torch::Tensor focalLoss(torch::Tensor output, torch::Tensor target);
 };
 
 class FocalLoss : public torch::nn::Module {
@@ -29,7 +28,5 @@ public:
     FocalLoss(float gamma, torch::Tensor alpha, bool size_average);
     torch::Tensor forward(torch::Tensor input, torch::Tensor target);
 };
+
 #endif
-
-
-

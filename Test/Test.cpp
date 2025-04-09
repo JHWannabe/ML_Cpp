@@ -31,6 +31,6 @@
 int main() {
 	std::string file_path = "../config/anomaly.ini";
 	int argc = 1;
-	const char* argv[] = { "anomaly detection" };
+	const char* argv[] = { "PASS Learning" };
 	return mainPASSLearning(argc, argv, file_path);
 }

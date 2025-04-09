@@ -34,7 +34,7 @@ namespace DataLoader {
     public:
         SegmentImageWithPaths() {}
         SegmentImageWithPaths(datasets::SegmentImageWithPaths& dataset_, const size_t batch_size_ = 1, const bool shuffle_ = false, const size_t num_workers_ = 0, const bool pin_memory_ = false, const bool drop_last_ = false, const std::string mode = "");
-        bool operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>>& data);
+        bool operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>, std::vector<cv::Mat>, std::vector<cv::Mat>>& data);
         void reset();
         size_t get_count_max();
     };

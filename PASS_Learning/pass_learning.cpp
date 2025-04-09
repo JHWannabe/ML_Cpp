@@ -101,13 +101,16 @@ int mainPASSLearning(int argc, const char* argv[], std::string file_path) {
 	} torch::globalContext().setBenchmarkCuDNN(false);
 
 	// (4) Set Transforms
-	std::vector<transforms_Compose> transform{
-		transforms_Resize(cv::Size(std::stol(ini["General"]["size_w"]), std::stol(ini["General"]["size_h"])), cv::INTER_LINEAR),  // {IH,IW,C} ===method{OW,OH}===> {OH,OW,C}
-		transforms_ToTensor(),                                                                            // Mat Image [0,255] or [0,65535] ===> Tensor Image [0,1]
+	std::vector<transforms_Compose> imageTransform = {
+		transforms_ToTensor(),
 		transforms_Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 	};
+
+	std::vector<transforms_Compose> labelTransform = {
+		transforms_ToTensor()
+	};
 	if (std::stol(ini["General"]["input_channel"]) == 1) {
-		transform.insert(transform.begin(), transforms_Grayscale(1));
+		imageTransform.insert(imageTransform.begin(), transforms_Grayscale(1));
 	}
 
 	// (5) Define Network
@@ -124,13 +127,13 @@ int mainPASSLearning(int argc, const char* argv[], std::string file_path) {
 	// (8.1) Training Phase
 	if (stringToBool(ini["Training"]["train"])) {
 		Set_Options(ini, argc, argv, args, "train");
-		train(ini, device, Model, transform);
+		train(ini, device, Model, imageTransform, labelTransform);
 	}
 
 	// (8.2) Test Phase
 	if (stringToBool(ini["Test"]["test"])) {
 		Set_Options(ini, argc, argv, args, "test");
-		test(ini, device, Model, transform);
+		test(ini, device, Model, imageTransform, labelTransform);
 	}
 
 	// End Processing
@@ -162,7 +165,7 @@ torch::Device Set_Device(mINI::INIStructure& ini)
 void Set_Model_Params(mINI::INIStructure& ini, std::shared_ptr<Supervised>& model, const std::string name) {
 
 	// (1) Make Directory
-	std::string dir = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/model_params/";
+	std::string dir = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["mode"] + "/model_params/";
 	fs::create_directories(dir);
 
 	// (2.1) File Open
@@ -191,7 +194,7 @@ void Set_Model_Params(mINI::INIStructure& ini, std::shared_ptr<Supervised>& mode
 void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode) {
 
 	// (1) Make Directory
-	std::string dir = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/options/";
+	std::string dir = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["mode"] + "/options/";
 	fs::create_directories(dir);
 
 	// (2) Terminal Output
@@ -249,108 +252,214 @@ bool stringToBool(const std::string& str)
 
 
 // -----------------------------------
-// 6. Test Function
+// 6. Confusion Matrix Function
 // -----------------------------------
-void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& transform) {
+int count_images_in_label_folder(const std::string& base_path) {
+	std::string label_path = base_path + "/label";
+	if (!fs::exists(label_path) || !fs::is_directory(label_path)) return 0;
+
+	int count = 0;
+	for (const auto& entry : fs::directory_iterator(label_path)) {
+		if (entry.is_regular_file()) {
+			std::string ext = entry.path().extension().string();
+			if (ext == ".jpg") {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+std::vector<std::vector<int>> compute_confusion_matrix_from_dirs(
+	const std::string& goodPath,
+	const std::string& ngPath,
+	const std::string& overkillPath,
+	const std::string& notfoundPath) {
+
+	int TP = count_images_in_label_folder(ngPath);         // NG → NG
+	int TN = count_images_in_label_folder(goodPath);       // GOOD → GOOD
+	int FP = count_images_in_label_folder(overkillPath);   // GOOD → NG
+	int FN = count_images_in_label_folder(notfoundPath);   // NG → GOOD
+
+	// Confusion matrix: [[TP, FN], [FP, TN]]
+	std::vector<std::vector<int>> cm = {
+		{TP, FN},
+		{FP, TN}
+	};
+	return cm;
+}
+
+Metrics compute_metrics_from_confusion_matrix(const std::vector<std::vector<int>>& cm) {
+	int TP = cm[0][0];
+	int FN = cm[0][1];
+	int FP = cm[1][0];
+	int TN = cm[1][1];
+
+	double recall = 0.0, precision = 0.0, f1_score = 0.0;
+
+	if (TP + FN > 0)
+		recall = static_cast<double>(TP) / (TP + FN);
+
+	if (TP + FP > 0)
+		precision = static_cast<double>(TP) / (TP + FP);
+
+	if (precision + recall > 0)
+		f1_score = 2.0 * (precision * recall) / (precision + recall);
+
+	return { recall, precision, f1_score, FN };
+}
+
+
+// -----------------------------------
+// 7. Test Function
+// -----------------------------------
+void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform) {
 	// (0) Initialization and Declaration
-	size_t correct, correct_per_class, total_class_pixel, class_count;
+	torch::NoGradGuard no_grad;
+	int yTrue;
 	float ave_loss;
 	double seconds, ave_time;
-	double pixel_wise_accuracy, ave_pixel_wise_accuracy;
-	double mean_accuracy, ave_mean_accuracy;
+	double ave_pixel_wise_accuracy, pixel_accuracy;
+	double ave_mean_accuracy;
+	std::vector<torch::Tensor> yTrueList, probList;
+	cv::Mat imgCv, labelCv;
 	std::string path, result_dir, fname;
+	std::string folderPath, goodPath, ngPath, overkillPath, notfoundPath;
 	std::string input_dir, output_dir;
 	std::ofstream ofs;
 	std::chrono::system_clock::time_point start, end;
-	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>> data;
-	torch::Tensor image, label, output, output_argmax, answer_mask, response_mask;
-	torch::Tensor loss;
+	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>, std::vector<cv::Mat>, std::vector<cv::Mat>> data;
+	torch::Tensor input, label, output, output_argmax, answer_mask, response_mask;
 	datasets::SegmentImageWithPaths dataset;
 	DataLoader::SegmentImageWithPaths dataloader;
 
 	// (1) Get Test Dataset
-	input_dir = ini["Test"]["test_in_dir"];
-	output_dir = ini["Test"]["test_out_dir"];
+	input_dir = ini["Test"]["test_dir"];
+	cv::Size resize = cv::Size(std::stol(ini["General"]["size_h"]), std::stol(ini["General"]["size_w"]));
 
-	dataset = datasets::SegmentImageWithPaths(input_dir, transform, "test");
+	dataset = datasets::SegmentImageWithPaths(input_dir, imageTransform, labelTransform, "test", resize);
 	dataloader = DataLoader::SegmentImageWithPaths(dataset, /*batch_size_=*/1, /*shuffle_=*/false, /*num_workers_=*/0);
 	std::cout << "total test images : " << dataset.size() << std::endl << std::endl;
 
 	// (2) Get Model
-	path = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
+	path = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["mode"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
 	torch::load(model, path, device);
 
-	// (3) Set Loss Function
-	auto criterion = Loss();
-
-	// (4) Initialization of Value
+	// (3) Initialization of Value
 	ave_loss = 0.0;
 	ave_pixel_wise_accuracy = 0.0;
 	ave_mean_accuracy = 0.0;
 	ave_time = 0.0;
+	pixel_accuracy = 0.0;
 
-	// (5) Tensor Forward
-	torch::NoGradGuard no_grad;
+	// (4) Tensor Forward
 	model->eval();
 	result_dir = ini["Test"]["test_result_dir"];
 	fs::create_directories(result_dir);
+
+	folderPath = result_dir + "/data";
+	goodPath = folderPath + "/Good";
+	ngPath = folderPath + "/NG";
+	overkillPath = folderPath + "/Overkill";
+	notfoundPath = folderPath + "/Notfound";
+
+	for (const auto& path : { goodPath, ngPath, overkillPath, notfoundPath }) {
+		fs::create_directories(path);
+		fs::create_directories(path + "/label");
+	}
+
 	ofs.open(result_dir + "/loss.txt", std::ios::out);
 	while (dataloader(data)) {
 
-		image = std::get<0>(data).to(device);
-		label = std::get<1>(data).to(device);
+		input = std::get<0>(data).to(device);
+		label = std::get<1>(data).to(device).squeeze();
+		fname = std::get<2>(data).at(0);
+		fname = fname.substr(0, fname.length() - 4);
+		yTrue = std::get<3>(data).at(0);
+		imgCv = std::get<4>(data).at(0);
+		labelCv = std::get<5>(data).at(0);
 
 		if (!device.is_cpu()) torch::cuda::synchronize();
 		start = std::chrono::system_clock::now();
 
-		output = model->forward(image);
+		output = model->forward(input);
 
 		if (!device.is_cpu()) torch::cuda::synchronize();
 		end = std::chrono::system_clock::now();
 		seconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() * 0.001 * 0.001;
 
-		loss = criterion(output, label);
+		float threshold = 0.1;
+		// 3. CPU로 이동 + detach
+		torch::Tensor final_outputs = output.detach().to(torch::kCPU);
+		torch::Tensor final_segmap = final_outputs.squeeze();  // torch::Tensor [H, W]
 
-		output_argmax = output.exp().argmax(/*dim=*/1, /*keepdim=*/true);
-		correct = (label == output_argmax).sum().item<int64_t>();
-		pixel_wise_accuracy = (double)correct / (double)(label.size(0) * label.size(1) * label.size(2));
+		// 5. threshold 적용
+		threshold = stod(ini["Test"]["threshold"]);
+		torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
+		torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
 
-		class_count = 0;
-		mean_accuracy = 0.0;
-		//for (size_t i = 0; i < std::get<4>(data).size(); i++) {
-		//	answer_mask = torch::full({ label.size(0), label.size(1), label.size(2) }, /*value=*/(int64_t)i, torch::TensorOptions().dtype(torch::kLong)).to(device);
-		//	total_class_pixel = (label == answer_mask).sum().item<int64_t>();
-		//	if (total_class_pixel != 0) {
-		//		response_mask = torch::full({ label.size(0), label.size(1), label.size(2) }, /*value=*/2, torch::TensorOptions().dtype(torch::kLong)).to(device);
-		//		correct_per_class = (((label == output_argmax).to(torch::kLong) + (label == answer_mask).to(torch::kLong)) == response_mask).sum().item<int64_t>();
-		//		mean_accuracy += (double)correct_per_class / (double)total_class_pixel;
-		//		class_count++;
-		//	}
-		//}
-		mean_accuracy = mean_accuracy / (double)class_count;
+		// 7. OpenCV로 변환
+		int height = combined_final_segmap.size(0);
+		int width = combined_final_segmap.size(1);
+		combined_final_segmap = combined_final_segmap.contiguous();  // data_ptr 접근용
+		cv::Mat segmapCv(height, width, CV_8UC1, combined_final_segmap.data_ptr());
 
-		ave_loss += loss.item<float>();
-		ave_pixel_wise_accuracy += pixel_wise_accuracy;
-		ave_mean_accuracy += mean_accuracy;
+		// 2. flatten label and prediction for decision
+		bool is_all_zero = torch::all(combined_final_segmap == 0).item<bool>();
+		int predicted_label = is_all_zero ? 1 : 0; // 1 = GOOD, 0 = NG
+
+		// 3. 저장 디렉토리 결정
+		std::string save_dir;
+		if (yTrue == 0 && predicted_label == 1) save_dir = notfoundPath;
+		else if (yTrue == 1 && predicted_label == 1) save_dir = goodPath;
+		else if (yTrue == 0 && predicted_label == 0) save_dir = ngPath;
+		else if (yTrue == 1 && predicted_label == 0) save_dir = overkillPath;
+
+		// 4. Segmentation Map
+		// TODO
+
+		// 5. 저장
+		cv::imwrite(save_dir + "/" + fname + ".jpg", imgCv);
+		cv::imwrite(save_dir + "/" + fname + "_segmap.jpg", segmapCv);
+		cv::imwrite(save_dir + "/label/" + fname + "_label.jpg", labelCv);
+
+		// 둘 다 CV_8UC1인지 확인
+		CV_Assert(segmapCv.type() == CV_8UC1 && labelCv.type() == CV_8UC1);
+		CV_Assert(segmapCv.size() == labelCv.size());
+
+		// 정확히 일치하는 픽셀 수 계산
+		cv::Mat match_mask;
+		cv::compare(segmapCv, labelCv, match_mask, cv::CMP_EQ); // 같으면 255, 다르면 0
+		int matched_pixels = cv::countNonZero(match_mask);
+
+		// 전체 픽셀 수
+		int total_pixels = segmapCv.rows * segmapCv.cols;
+
+		// 정확도 계산
+		pixel_accuracy = static_cast<double>(matched_pixels) / total_pixels;
+
+		ave_pixel_wise_accuracy += pixel_accuracy;
 		ave_time += seconds;
 
-		std::cout << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " pixel-wise-accuracy:" << pixel_wise_accuracy << " mean-accuracy:" << mean_accuracy << std::endl;
-		ofs << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " pixel-wise-accuracy:" << pixel_wise_accuracy << " mean-accuracy:" << mean_accuracy << std::endl;
-
-		//fname = result_dir + '/' + std::get<3>(data).at(0);
-		//visualizer::save_label(output_argmax.detach(), fname, std::get<4>(data), /*cols=*/1, /*padding=*/0);
-
+		std::cout << '<' << std::get<2>(data).at(0) << "> pixel-wise-accuracy: " << pixel_accuracy << std::endl;
+		ofs << '<' << std::get<2>(data).at(0) << "> pixel-wise-accuracy: " << pixel_accuracy << std::endl;
 	}
 
 	// (6) Calculate Average
-	ave_loss = ave_loss / (float)dataset.size();
 	ave_pixel_wise_accuracy = ave_pixel_wise_accuracy / (double)dataset.size();
-	ave_mean_accuracy = ave_mean_accuracy / (double)dataset.size();
 	ave_time = ave_time / (double)dataset.size();
 
 	// (7) Average Output
-	std::cout << "<All> cross-entropy:" << ave_loss << " pixel-wise-accuracy:" << ave_pixel_wise_accuracy << " mean-accuracy:" << ave_mean_accuracy << " (time:" << ave_time << ')' << std::endl;
-	ofs << "<All> cross-entropy:" << ave_loss << " pixel-wise-accuracy:" << ave_pixel_wise_accuracy << " mean-accuracy:" << ave_mean_accuracy << " (time:" << ave_time << ')' << std::endl;
+	std::cout << "<All> pixel-wise-accuracy: " << ave_pixel_wise_accuracy << " (time:" << ave_time << ')' << std::endl;
+	ofs << "<All> pixel-wise-accuracy: " << ave_pixel_wise_accuracy << " (time:" << ave_time << ')' << std::endl;
+
+	// (8) Calculate Confusion Matrix
+	auto cm = compute_confusion_matrix_from_dirs(goodPath, ngPath, overkillPath, notfoundPath);
+	Metrics m = compute_metrics_from_confusion_matrix(cm);
+
+	// (9) Print Confusion Matrix
+	std::cout << "Notfound: " << m.FN << "Recall: " << m.recall << ", F1-score: " << m.f1_score << std::endl;
+	ofs << "<All> Notfound: " << m.FN << "Recall: " << m.recall << ", F1-score: " << m.f1_score << std::endl;
 
 	// Post Processing
 	ofs.close();
@@ -360,9 +469,9 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 }
 
 // -----------------------------------
-// 6. Train Function
+// 8. Train Function
 // -----------------------------------
-void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& transform) {
+void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform) {
 
 	constexpr bool train_shuffle = true;  // whether to shuffle the training dataset
 	constexpr size_t train_workers = 4;  // the number of workers to retrieve data from the training dataset
@@ -373,28 +482,19 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	// a0. Initialization and Declaration
 	// -----------------------------------
 
-	size_t epoch;
-	size_t total_iter;
-	size_t start_epoch, total_epoch;
-	std::string mode;
-	std::string date, date_out;
-	std::string buff, latest;
-	std::string checkpoint_dir, save_images_dir, path;
-	std::string input_dir, output_dir;
-	std::string valid_input_dir, valid_output_dir;
+	size_t epoch, total_iter, start_epoch, total_epoch;
+	std::string mode, date, date_out, buff, latest;
+	std::string checkpoint_dir, path, input_dir, valid_input_dir;
 	std::stringstream ss;
 	std::ifstream infoi;
 	std::ofstream ofs, init, infoo;
-	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>> mini_batch;
-	torch::Tensor loss, image, label, output, output_argmax;
+	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>, std::vector<cv::Mat>, std::vector<cv::Mat>> mini_batch;
+	torch::Tensor loss, image, label, output;
 	datasets::SegmentImageWithPaths dataset, valid_dataset;
 	DataLoader::SegmentImageWithPaths dataloader, valid_dataloader;
 	visualizer::graph train_loss, valid_loss;
 	progress::display* show_progress;
 	progress::irregular irreg_progress;
-	float dice_weight = 0.6;
-	float focal_weight = 0.4;
-
 
 
 	// -----------------------------------
@@ -412,14 +512,15 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	}
 
 	// (1) Get Training Dataset
-	dataset = datasets::SegmentImageWithPaths(input_dir, transform, mode);
+	cv::Size resize = cv::Size(std::stol(ini["General"]["size_h"]), std::stol(ini["General"]["size_w"]));
+	dataset = datasets::SegmentImageWithPaths(input_dir, imageTransform, labelTransform, mode, resize);
 	dataloader = DataLoader::SegmentImageWithPaths(dataset, std::stol(ini["Training"]["batch_size"]), /*shuffle_=*/train_shuffle, /*num_workers_=*/train_workers);
 	std::cout << "total training images : " << dataset.size() << std::endl;
 
 	// (2) Get Validation Dataset
 	if (stringToBool(ini["Validation"]["valid"])) {
 		valid_input_dir = ini["Validation"]["valid_in_dir"];
-		valid_dataset = datasets::SegmentImageWithPaths(valid_input_dir, transform, "valid");
+		valid_dataset = datasets::SegmentImageWithPaths(valid_input_dir, imageTransform, labelTransform, "valid", resize);
 		valid_dataloader = DataLoader::SegmentImageWithPaths(valid_dataset, std::stol(ini["Validation"]["valid_batch_size"]), /*shuffle_=*/valid_shuffle, /*num_workers_=*/valid_workers);
 		std::cout << "total validation images : " << valid_dataset.size() << std::endl;
 	}
@@ -437,18 +538,19 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 
 	// (4) Set Loss Function
 	auto criterion = Loss();
+	torch::nn::L1Loss L1Loss = torch::nn::L1Loss(torch::nn::L1LossOptions().reduction(torch::kMean));
 
 	// (5) Make Directories
-	checkpoint_dir = "D:/DLL_Porting/PASS_Learning/checkpoints/" + ini["General"]["dataset"];
+	checkpoint_dir = "D:/DLL_Porting/PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + mode;
 	path = checkpoint_dir + "/models";  fs::create_directories(path);
 	path = checkpoint_dir + "/optims";  fs::create_directories(path);
 	path = checkpoint_dir + "/log";  fs::create_directories(path);
 
 	// (6) Set Training Loss for Graph
 	path = checkpoint_dir + "/graph";
-	train_loss = visualizer::graph(path, /*gname_=*/"train_loss", /*label_=*/{ "Classification" });
+	train_loss = visualizer::graph(path, /*gname_=*/"train_loss", /*label_=*/{ "PASS Learning" });
 	if (stringToBool(ini["Validation"]["valid"])) {
-		valid_loss = visualizer::graph(path, /*gname_=*/"valid_loss", /*label_=*/{ "Classification" });
+		valid_loss = visualizer::graph(path, /*gname_=*/"valid_loss", /*label_=*/{ "PASS Learning" });
 	}
 
 	// (7) Get Weights and File Processing
@@ -506,88 +608,86 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	irreg_progress.restart(start_epoch - 1, total_epoch);
 	for (epoch = start_epoch; epoch <= total_epoch; epoch++) {
 
-	    model->train();
-	    ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl << std::endl;
-	    show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "classify" });
+		model->train();
+		ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl << std::endl;
+		show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "classify" });
 
-	    // -----------------------------------
-	    // b1. Mini Batch Learning
-	    // -----------------------------------
-	    while (dataloader(mini_batch)) {
+		// -----------------------------------
+		// b1. Mini Batch Learning
+		// -----------------------------------
+		while (dataloader(mini_batch)) {
 
-	        // -----------------------------------
-	        // c1. U-Net Training Phase
-	        // -----------------------------------
-	        image = std::get<0>(mini_batch).to(device);
-	        label = std::get<1>(mini_batch).to(device);
-	        output = model->forward(image);
+			// -----------------------------------
+			// c1. U-Net Training Phase
+			// -----------------------------------
+			image = std::get<0>(mini_batch).to(device);
+			label = std::get<1>(mini_batch).to(device);
+			output = model->forward(image);
 			output = torch::sigmoid(output);
-	        loss = criterion(output, label, dice_weight, focal_weight);
-	        optimizer.zero_grad();
-	        loss.backward();
-	        optimizer.step();
+			loss = criterion(output, label, stof(ini["Training"]["l1_weight"]), stof(ini["Training"]["focal_weight"]));
+			loss.backward();
+			optimizer.step();
+			optimizer.zero_grad();
 			scheduler.step(epoch);
 
-	        // -----------------------------------
-	        // c2. Record Loss (iteration)
-	        // -----------------------------------
-	        show_progress->increment(/*loss_value=*/{ loss.item<float>() });
-	        ofs << "iters:" << show_progress->get_iters() << '/' << total_iter << ' ' << std::flush;
+			// -----------------------------------
+			// c2. Record Loss (iteration)
+			// -----------------------------------
+			show_progress->increment(/*loss_value=*/{ loss.item<float>() });
+			ofs << "iters:" << show_progress->get_iters() << '/' << total_iter << ' ' << std::flush;
 			ofs << "classify:" << loss.item<float>() << "(ave:" << show_progress->get_ave(0) << ')' << std::endl;
 
-	    }
+		}
 
-		
-
-	    // -----------------------------------
-	    // b2. Record Loss (epoch)
-	    // -----------------------------------
-	    train_loss.plot(/*base=*/epoch, /*value=*/show_progress->get_ave());
+		// -----------------------------------
+		// b2. Record Loss (epoch)
+		// -----------------------------------
+		train_loss.plot(/*base=*/epoch, /*value=*/show_progress->get_ave());
 
 
-	    // -----------------------------------
-	    // b4. Validation Mode
-	    // -----------------------------------
-	    if (stringToBool(ini["Validation"]["valid"]) && ((epoch - 1) % std::stol(ini["Validation"]["valid_freq"]) == 0)) {
-	        valid(ini, valid_dataloader, device, criterion, model, epoch, valid_loss);
-	    }
+		// -----------------------------------
+		// b4. Validation Mode
+		// -----------------------------------
+		if (stringToBool(ini["Validation"]["valid"]) && ((epoch - 1) % std::stol(ini["Validation"]["valid_freq"]) == 0)) {
+			valid(ini, valid_dataloader, device, criterion, model, epoch, valid_loss);
+		}
 
-	    // -----------------------------------
-	    // b5. Save Model Weights and Optimizer Parameters
-	    // -----------------------------------
-	    if (epoch % std::stol(ini["Training"]["save_epoch"]) == 0) {
-	        path = checkpoint_dir + "/models/epoch_" + std::to_string(epoch) + ".pth";  torch::save(model, path);
-	        path = checkpoint_dir + "/optims/epoch_" + std::to_string(epoch) + ".pth";  torch::save(optimizer, path);
-	    }
-	    path = checkpoint_dir + "/models/epoch_latest.pth";  torch::save(model, path);
-	    path = checkpoint_dir + "/optims/epoch_latest.pth";  torch::save(optimizer, path);
-	    infoo.open(checkpoint_dir + "/models/info.txt", std::ios::out);
-	    infoo << "latest = " << epoch << std::endl;
-	    infoo.close();
+		// -----------------------------------
+		// b5. Save Model Weights and Optimizer Parameters
+		// -----------------------------------
+		if (epoch % std::stol(ini["Training"]["save_epoch"]) == 0) {
+			path = checkpoint_dir + "/models/epoch_" + std::to_string(epoch) + ".pth";  torch::save(model, path);
+			path = checkpoint_dir + "/optims/epoch_" + std::to_string(epoch) + ".pth";  torch::save(optimizer, path);
+		}
+		path = checkpoint_dir + "/models/epoch_latest.pth";  torch::save(model, path);
+		path = checkpoint_dir + "/optims/epoch_latest.pth";  torch::save(optimizer, path);
+		infoo.open(checkpoint_dir + "/models/info.txt", std::ios::out);
+		infoo << "latest = " << epoch << std::endl;
+		infoo.close();
 
-	    // -----------------------------------
-	    // b6. Show Elapsed Time
-	    // -----------------------------------
-	    if (epoch % 10 == 0) {
+		// -----------------------------------
+		// b6. Show Elapsed Time
+		// -----------------------------------
+		if (epoch % 10 == 0) {
 
-	        // -----------------------------------
-	        // c1. Get Output String
-	        // -----------------------------------
-	        ss.str(""); ss.clear(std::stringstream::goodbit);
-	        irreg_progress.nab(epoch);
-	        ss << "elapsed = " << irreg_progress.get_elap() << '(' << irreg_progress.get_sec_per() << "sec/epoch)   ";
-	        ss << "remaining = " << irreg_progress.get_rem() << "   ";
-	        ss << "now = " << irreg_progress.get_date() << "   ";
-	        ss << "finish = " << irreg_progress.get_date_fin();
-	        date_out = ss.str();
+			// -----------------------------------
+			// c1. Get Output String
+			// -----------------------------------
+			ss.str(""); ss.clear(std::stringstream::goodbit);
+			irreg_progress.nab(epoch);
+			ss << "elapsed = " << irreg_progress.get_elap() << '(' << irreg_progress.get_sec_per() << "sec/epoch)   ";
+			ss << "remaining = " << irreg_progress.get_rem() << "   ";
+			ss << "now = " << irreg_progress.get_date() << "   ";
+			ss << "finish = " << irreg_progress.get_date_fin();
+			date_out = ss.str();
 
-	        // -----------------------------------
-	        // c2. Terminal Output
-	        // -----------------------------------
-	        std::cout << date_out << std::endl << progress::separator() << std::endl;
-	        ofs << date_out << std::endl << progress::separator() << std::endl;
+			// -----------------------------------
+			// c2. Terminal Output
+			// -----------------------------------
+			std::cout << date_out << std::endl << progress::separator() << std::endl;
+			ofs << date_out << std::endl << progress::separator() << std::endl;
 
-	    }
+		}
 
 	}
 
@@ -599,18 +699,18 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 }
 
 // -----------------------------------
-// 6. Valid Function
+// 9. Valid Function
 // -----------------------------------
 void valid(mINI::INIStructure& ini, DataLoader::SegmentImageWithPaths& valid_dataloader, torch::Device& device, Loss& criterion, std::shared_ptr<Supervised>& model, const size_t epoch, visualizer::graph& writer) {
 
 	// (0) Initialization and Declaration
-	size_t correct, correct_per_class, total_class_pixel, class_count;
+	size_t correct, class_count;
 	size_t iteration;
 	float ave_loss, total_loss;
 	double pixel_wise_accuracy, ave_pixel_wise_accuracy, total_pixel_wise_accuracy;
 	double mean_accuracy, ave_mean_accuracy, total_mean_accuracy;
 	std::ofstream ofs;
-	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>> mini_batch;
+	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>, std::vector<cv::Mat>, std::vector<cv::Mat>> mini_batch;
 	torch::Tensor image, label, output, output_argmax, answer_mask, response_mask;
 	torch::Tensor loss;
 	float dice_weight = 0.6;

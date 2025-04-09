@@ -1,5 +1,4 @@
 #include <string>
-#include <string>
 #include <tuple>
 #include <vector>
 #include <algorithm>
@@ -52,7 +51,7 @@ DataLoader::SegmentImageWithPaths::SegmentImageWithPaths(datasets::SegmentImageW
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{SegmentImageWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>>& data) {
+bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>, std::vector<cv::Mat>, std::vector<cv::Mat>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -62,9 +61,9 @@ bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, tor
     torch::Tensor data1, data2, tensor1, tensor2;
     std::vector<std::string> data3;
     std::vector<int> data4;
-    std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> data5;
-    std::tuple<torch::Tensor, torch::Tensor, std::string, int> group;
-    std::tuple<torch::Tensor, torch::Tensor, std::string, int>* data_before;
+    std::vector<cv::Mat> data5, data6;
+    std::tuple<torch::Tensor, torch::Tensor, std::string, int, cv::Mat, cv::Mat> group;
+    std::tuple<torch::Tensor, torch::Tensor, std::string, int, cv::Mat, cv::Mat>* data_before;
 
     // (1) Special Handling on Certain Count
     if ((this->count == 0) && this->shuffle) {
@@ -76,7 +75,7 @@ bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, tor
     }
 
     // (2) Get Mini Batch Data
-    data_before = new std::tuple<torch::Tensor, torch::Tensor, std::string, int>[mini_batch_size];
+    data_before = new std::tuple<torch::Tensor, torch::Tensor, std::string, int, cv::Mat, cv::Mat>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
     if (this->num_workers == 0) {
         for (i = 0; i < mini_batch_size; i++) {
@@ -99,6 +98,8 @@ bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, tor
     data2 = torch::unsqueeze(data2, /*dim=*/0);
     data3.push_back(std::get<2>(data_before[0]));
     data4.push_back(std::get<3>(data_before[0]));
+    data5.push_back(std::get<4>(data_before[0]));
+    data6.push_back(std::get<5>(data_before[0]));
     for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
@@ -109,6 +110,8 @@ bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, tor
         data2 = torch::cat({ data2, tensor2 }, /*dim=*/0);  // {i,H,W} + {1,H,W} ===> {i+1,H,W}
         data3.push_back(std::get<2>(group));
         data4.push_back(std::get<3>(group));
+        data5.push_back(std::get<4>(group));
+        data6.push_back(std::get<5>(group));
     }
     data1 = data1.contiguous().detach().clone();
     data2 = data2.contiguous().detach().clone();
@@ -121,7 +124,8 @@ bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, tor
 
     // Post Processing
     this->count++;
-    data = { data1, data2, data3, data4 };  // {N,C,H,W} (image), {N,H,W} (label), {N} (fnames), {N} (y_true)
+
+	data = { data1, data2, data3, data4, data5, data6 };  // {N,C,H,W} (image), {N,H,W} (label), {N} (fnames), {N} (y_true), {H,W} (image), {H,W} (label)
     delete[] data_before;
 
     // End Processings

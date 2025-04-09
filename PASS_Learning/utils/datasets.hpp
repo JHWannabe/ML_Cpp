@@ -11,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 // For Original Header
 #include "transforms.hpp"
+#include "fastNoiseLite.h"
 
 // -----------------------
 // namespace{datasets}
@@ -19,10 +20,20 @@ namespace datasets {
 
     // Function Prototype
     void collect(const std::string root, const std::string sub, std::vector<std::string>& paths, std::vector<std::string>& fnames);
-    torch::Tensor Data1d_Loader(std::string& path);
     cv::Mat RGB_Loader(std::string& path);
-    cv::Mat Index_Loader(std::string& path);
-    std::tuple<torch::Tensor, torch::Tensor> BoundingBox_Loader(std::string& path);
+    cv::Mat GRAY_Loader(std::string& path);
+    cv::Mat LoadImageFromFile(const std::string& filename);
+
+    // ----------------------------------------------------
+    // namespace{datasets} -> class{Augmentation}
+    // ----------------------------------------------------
+    class Augmentation {
+    public:
+        std::tuple<cv::Mat, cv::Mat> generateAnomaly(cv::Mat& img);
+        cv::Mat generatePerlinNoise(cv::Mat& img);
+		cv::Mat stableDiffusion(cv::Mat& img);
+        cv::Mat generatePerlinNoise2D(int width, int height, int res_x, int res_y);
+    };
 
     // ----------------------------------------------------
     // namespace{datasets} -> class{SegmentImageWithPaths}
@@ -31,34 +42,15 @@ namespace datasets {
     private:
         int y_true = 1;
         std::string mode;
-        std::vector<transforms_Compose> transform;
+        std::vector<transforms_Compose> imageTransform, labelTransform;
         std::vector<std::string> paths, fnames;
+        cv::Size resize;
     public:
         SegmentImageWithPaths() {}
-        SegmentImageWithPaths(const std::string root, std::vector<transforms_Compose>& transform, const std::string mode);
-        void get(const size_t idx, std::tuple<torch::Tensor, torch::Tensor, std::string, int>& data);
+        SegmentImageWithPaths(const std::string root, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform, const std::string mode, cv::Size resize);
+        void get(const size_t idx, std::tuple<torch::Tensor, torch::Tensor, std::string, int, cv::Mat, cv::Mat>& data);
         size_t size();
     };
 }
-
-// ----------------------------------------------------
-// class{AnomalyGenerator}
-// ----------------------------------------------------
-class AnomalyGenerator {
-public:
-    AnomalyGenerator() {}
-    cv::Mat generateTargetForegroundMask(cv::Mat img);
-    cv::Mat anomalySource(cv::Mat img);
-    std::vector<std::pair<cv::Mat, cv::Mat>> generateAnomaly(cv::Mat img);
-    cv::Mat generatePerlinNoiseMask(cv::Mat img);
-    cv::Mat rand_perlin_2d_np(cv::Size shape, cv::Size res);
-
-private:
-    cv::Size resize;
-    float threshold = 0.5;
-    int maxScale = 6, minScale = 0;
-    std::pair<float, float> transparency_range;float lerp(float a, float b, float t) { return a + t * (b - a); }
-    float fade(float t) { return 6 * t * t * t * t * t - 15 * t * t * t * t + 10 * t * t * t; }
-};
 
 #endif
