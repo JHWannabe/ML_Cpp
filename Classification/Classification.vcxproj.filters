@@ -16,9 +16,6 @@
     <Filter Include="utils">
       <UniqueIdentifier>{87245b14-1aa9-4fbf-86aa-b2ea01239fcb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="config">
-      <UniqueIdentifier>{a4b597b4-54df-4553-acde-dc4703f54073}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -98,10 +95,5 @@
     <ClCompile Include="networks.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="config\classification.ini">
-      <Filter>config</Filter>
-    </None>
   </ItemGroup>
 </Project>

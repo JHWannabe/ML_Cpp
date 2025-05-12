@@ -1,24 +1,36 @@
 #ifndef DATASETS_HPP
 #define DATASETS_HPP
 
-#include <string>
 #include <tuple>
+#include <cmath>
+#include <string>
 #include <vector>
 #include <random>
-#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <filesystem>
 // For External Library
 #include <torch/torch.h>
+#include <Python.h>
+#include <pybind11/embed.h>
+#include <pybind11/numpy.h>
 #include <opencv2/opencv.hpp>
+#include <onnxruntime_cxx_api.h>
 // For Original Header
 #include "transforms.hpp"
 #include "fastNoiseLite.h"
+#include "diffusion.h"
+
+namespace py = pybind11;
 
 // -----------------------
 // namespace{datasets}
 // -----------------------
 namespace datasets {
-
-    // Function Prototype
     void collect(const std::string root, const std::string sub, std::vector<std::string>& paths, std::vector<std::string>& fnames);
     cv::Mat RGB_Loader(std::string& path);
     cv::Mat GRAY_Loader(std::string& path);
@@ -29,9 +41,8 @@ namespace datasets {
     // ----------------------------------------------------
     class Augmentation {
     public:
-        std::tuple<cv::Mat, cv::Mat> generateAnomaly(cv::Mat& img);
+        std::tuple<cv::Mat, cv::Mat> generateAnomaly(std::string file_path);
         cv::Mat generatePerlinNoise(cv::Mat& img);
-		cv::Mat stableDiffusion(cv::Mat& img);
         cv::Mat generatePerlinNoise2D(int width, int height, int res_x, int res_y);
     };
 
@@ -42,6 +53,7 @@ namespace datasets {
     private:
         int y_true = 1;
         std::string mode;
+        bool anomaly = true;
         std::vector<transforms_Compose> imageTransform, labelTransform;
         std::vector<std::string> paths, fnames;
         cv::Size resize;

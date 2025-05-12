@@ -1,24 +1,13 @@
-#include <fstream>
-#include <filesystem>
-#include <string>
-#include <sstream>
-#include <tuple>
-#include <vector>
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
 // For External Library
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
-// #include <png.h>
+#include <png.h>
 #include "../png++/png.hpp"
 // For Original Header
 #include "transforms.hpp"
 #include "datasets.hpp"
 
 namespace fs = std::filesystem;
-namespace py = pybind11;
 
 // -----------------------------------------------
 // namespace{datasets} -> function{collect}
@@ -46,29 +35,23 @@ void datasets::collect(const std::string root, const std::string sub, std::vecto
 	}
 }
 
+// -----------------------------------------------
+// namespace{datasets} -> function{LoadImageFromFile}
+// -----------------------------------------------
 cv::Mat datasets::LoadImageFromFile(const std::string& filename)
 {
-	// 파일을 바이너리로 읽기
 	std::ifstream file(filename, std::ios::binary);
 	if (!file) {
 		std::cerr << "파일을 열 수 없습니다: " << filename << std::endl;
 		return cv::Mat();
 	}
 
-	// 파일 크기 구하기
-	file.seekg(0, std::ios::end);
-	size_t fileSize = file.tellg();
-	file.seekg(0, std::ios::beg);
-
-	// 바이트 배열로 읽기
-	std::vector<uchar> buffer(fileSize);
-	file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
-	file.close();
-
-	// OpenCV를 이용하여 디코딩
-	return cv::imdecode(buffer, cv::IMREAD_COLOR);
+	return cv::imread(filename, cv::IMREAD_COLOR);
 }
 
+// -----------------------------------------------
+// namespace{datasets} -> function{RGB_Loader}
+// -----------------------------------------------
 cv::Mat datasets::RGB_Loader(std::string& path) {
 	cv::Mat BGR;
 	BGR = LoadImageFromFile(path);
@@ -77,9 +60,13 @@ cv::Mat datasets::RGB_Loader(std::string& path) {
 		std::cerr << "Error : Couldn't open the image '" << path << "'." << std::endl;
 		std::exit(1);
 	}
-	return BGR.clone();
+
+	return BGR;
 }
 
+// -----------------------------------------------
+// namespace{datasets} -> function{GRAY_Loader}
+// -----------------------------------------------
 cv::Mat datasets::GRAY_Loader(std::string& path) {
 	cv::Mat BGR, GRAY;
 	BGR = LoadImageFromFile(path);
@@ -127,8 +114,16 @@ void datasets::SegmentImageWithPaths::get(const size_t idx, std::tuple<torch::Te
 		label = datasets::GRAY_Loader(label_path);
 	}
 	else if (this->mode == "unsuper") {
-		Augmentation augmentor;
-		std::tie(img, label) = augmentor.generateAnomaly(img);
+		if (this->anomaly) {
+			Augmentation augmentor;
+			std::tie(img, label) = augmentor.generateAnomaly(file_path);
+			//std::string imgPath = "./anomaly_source.jpg";
+			//img = datasets::RGB_Loader(imgPath);
+			this->anomaly = false;
+		}
+		else {
+			this->anomaly = true;
+		}
 	}
 	else if (this->mode == "test" || this->mode == "valid") {
 		if (this->paths.at(idx).find("NG") != std::string::npos) { this->y_true = 0; }
@@ -140,12 +135,31 @@ void datasets::SegmentImageWithPaths::get(const size_t idx, std::tuple<torch::Te
 		if ((pos = label_path.find("origin")) != std::string::npos) { label_path.replace(pos, 6, "label"); }
 		label = datasets::GRAY_Loader(label_path);
 	}
-	
+
 	cv::resize(img, img, this->resize);
 	cv::resize(label, label, this->resize);
 
-    torch::Tensor image_tensor = transforms::apply(this->imageTransform, img);
+	torch::Tensor image_tensor = transforms::apply(this->imageTransform, img);
 	torch::Tensor label_tensor = transforms::apply(this->labelTransform, label).squeeze(0);
+
+	// 1) float 타입으로 변환
+	label_tensor = label_tensor.to(torch::kFloat32);
+	// 2) 현재 최대값 추출
+	float max_val = label_tensor.max().item<float>();
+	// 3) (max_val > 0)일 때만 정규화
+	if (max_val > 0.0f) {
+		label_tensor = label_tensor / max_val;
+	}
+
+	//std::cout << label_tensor.max() << std::endl;
+
+	//auto sub = label_tensor.slice(0, 0, 5)   // H축 0~4
+	//	.slice(1, 0, 5); // W축 0~4
+	//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
+	//	<< sub << "\n";
+
+	//torch::save(image_tensor, "libtorch_img.pth");
+	//torch::save(label_tensor, "libtorch_label.pth");
 
 	data = { image_tensor.detach().clone(), label_tensor.detach().clone(), fname, this->y_true, img, label };
 
@@ -159,18 +173,18 @@ size_t datasets::SegmentImageWithPaths::size() {
 	return this->fnames.size();
 }
 
-
 // -------------------------------------------------------------------------
 // namespace{datasets} -> class{Augmentation} -> function{generateAnomaly}
 // -------------------------------------------------------------------------
-std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(cv::Mat& img)
+std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string file_path)
 {
 	// (1) Generate Mask
+	cv::Mat img = datasets::RGB_Loader(file_path);
 	cv::Mat mask_f, mask = generatePerlinNoise(img);
 	cv::cvtColor(mask, mask_f, cv::COLOR_GRAY2BGR);
 
 	// (2) Generate Stable Diffusion Image
-	cv::Mat stableDiffusionImg = stableDiffusion(img);
+	cv::Mat stableDiffusionImg = stableDiffusion(file_path);
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -178,17 +192,20 @@ std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(cv::Mat& im
 	float factor = dist(gen);
 	cv::Mat stable_f, img_f;
 	stableDiffusionImg.convertTo(stable_f, CV_32FC3);
+	//cv::imwrite("stableDiffusionImg.jpg", stable_f);
 	img.convertTo(img_f, CV_32FC3);
 	cv::Mat anomalySourceImg = factor * mask_f.mul(stable_f) + (1.0f - factor) * (mask_f.mul(img_f));
+	cv::cvtColor(anomalySourceImg, anomalySourceImg, cv::COLOR_BGR2RGB);
 
 	// (3) Blend Image and Anomaly Source
 	cv::Mat temp = (cv::Scalar(1.0f, 1.0f, 1.0f) - mask_f).mul(img_f);
 	anomalySourceImg = temp + anomalySourceImg;
-	cv::cvtColor(anomalySourceImg, anomalySourceImg, cv::COLOR_RGB2BGR);
+	img = anomalySourceImg;
+	img.convertTo(img, CV_8UC3);
 	//cv::imwrite("anomaly_source.jpg", anomalySourceImg);
-	//cv::imwrite("mask.jpg", mask * 255);		
+	//cv::imwrite("mask.jpg", mask * 255);
 
-	return std::make_tuple(anomalySourceImg, mask);
+	return std::make_tuple(img, mask);
 }
 
 // -------------------------------------------------------------------------
@@ -204,14 +221,14 @@ cv::Mat datasets::Augmentation::generatePerlinNoise(cv::Mat& img)
 	int scale_y = std::pow(2, dist1(rng));
 
 	// Perlin 노이즈 생성
-	cv::Mat noise = generatePerlinNoise2D(img.rows, img.cols, scale_x, scale_y);
+	cv::Mat noise = generatePerlinNoise2D(img.cols, img.rows, scale_x, scale_y);
 
 	// Affine 회전 (선택)
 	std::uniform_real_distribution<float> dist2(-90.0f, 90.0f);
 	float angle = dist2(rng);
 
 	// 2. 회전 중심 = 이미지 중앙
-	cv::Point2f center(noise.cols / 2.0f, noise.rows / 2.0f);
+	cv::Point2f center(noise.rows / 2.0f, noise.cols / 2.0f);
 
 	// 3. 회전 매트릭스 계산
 	cv::Mat rot_mat = cv::getRotationMatrix2D(center, angle, 1.0);
@@ -228,23 +245,8 @@ cv::Mat datasets::Augmentation::generatePerlinNoise(cv::Mat& img)
 	// float(0.0, 1.0) → uint8(0, 1)
 	mask_float.convertTo(mask, CV_32FC1);
 
-	// 디버깅용 시각화 저장
-	//cv::imwrite("foreground_mask.jpg", mask * 255);  // 0/1 → 0/255
-
 	return mask;  // CV_8UC1, 값은 0 또는 1
 }
-
-// -------------------------------------------------------------------------
-// namespace{datasets} -> class{Augmentation} -> function{stableDiffusion}
-// -------------------------------------------------------------------------
-cv::Mat datasets::Augmentation::stableDiffusion(cv::Mat& img)  
-{
-	std::string path = "//192.168.10.230/JHChun/augmentations/bubbly/bubbly_0038.jpg";
-	cv::Mat Img = datasets::RGB_Loader(path);
-	cv::resize(Img, Img, img.size());
-    return Img;
-}
-
 
 // -------------------------------------------------------------------------
 // namespace{datasets} -> class{Augmentation} -> function{generatePerlinNoise2D}

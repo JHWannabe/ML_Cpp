@@ -453,7 +453,7 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 	auto criterion = Loss();
 
 	// (5) Make Directories
-	checkpoint_dir = "../Classifcation/checkpoints/" + ini["General"]["dataset"];
+	checkpoint_dir = "../Classification/checkpoints/" + ini["General"]["dataset"];
 	path = checkpoint_dir + "/models";  fs::create_directories(path);
 	path = checkpoint_dir + "/optims";  fs::create_directories(path);
 	path = checkpoint_dir + "/log";  fs::create_directories(path);
@@ -582,7 +582,7 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 		model->train();
 		ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl;
 		show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "classify" });
-
+		std::cout << std::endl;
 
 		// -----------------------------------
 		// 학습률 스케줄러: 에폭마다 학습률 업데이트
@@ -605,10 +605,19 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 			image = std::get<0>(mini_batch).to(device);
 			label = std::get<1>(mini_batch).to(device);
 			output = model->forward(image);
-			loss = criterion(output, label);
-			optimizer.zero_grad();
+			try {
+				loss = criterion(output, label);
+			}
+			catch (const c10::Error& e) {
+				std::cerr << "LibTorch c10::Error: " << e.what() << std::endl;
+			}
+			catch (const std::exception& e) {
+				std::cerr << "std::exception: " << e.what() << std::endl;
+			}
+
 			loss.backward();
 			optimizer.step();
+			optimizer.zero_grad();
 
 			// -----------------------------------
 			// c2. Record Loss (iteration)

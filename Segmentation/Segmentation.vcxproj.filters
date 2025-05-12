@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="utils">
-      <UniqueIdentifier>{d0d9da77-517c-4544-b1ed-0b9d39b7ff42}</UniqueIdentifier>
+      <UniqueIdentifier>{6c4567da-ffb0-4046-a50f-41889318c0d4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -22,15 +22,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ini.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="loss.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="networks.hpp">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="utils\dataloader.hpp">
@@ -54,6 +45,15 @@
     <ClInclude Include="utils\visualizer.hpp">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="loss.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="networks.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="segmentation.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -63,15 +63,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="loss.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="segmentation.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="networks.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="utils\dataloader.cpp">
@@ -94,6 +85,15 @@
     </ClCompile>
     <ClCompile Include="utils\visualizer.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="loss.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="networks.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="segmentation.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

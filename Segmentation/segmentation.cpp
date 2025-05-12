@@ -494,6 +494,7 @@ void train(mINI::INIStructure& ini, torch::Device& device, UNet& model, std::vec
         model->train();
         ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl;
         show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "classify" });
+        std::cout << std::endl;
 
         // -----------------------------------
         // b1. Mini Batch Learning

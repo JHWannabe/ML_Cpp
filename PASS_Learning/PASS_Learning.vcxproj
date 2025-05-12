@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{ae784c40-daaf-4562-9c6e-48f23a26cd38}</ProjectGuid>
+    <ProjectGuid>{db803858-a99c-46a9-9eae-1873bc789878}</ProjectGuid>
     <RootNamespace>PASSLearning</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -70,11 +70,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>D:\DLL_Porting\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>C:\Users\JHCHUN\AppData\Local\Programs\Python\Python311\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\JHCHUN\AppData\Local\Programs\Python\Python311\libs;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -115,21 +110,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;PASSLEARNING_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\cuda\include;C:\libtorch\include\torch\csrc\api\include;C:\libtorch\include;C:\vcpkg\installed\x64-windows\include;C:\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4996;4251;4244;4267;4275;4819;4624;4305;4715</DisableSpecificWarnings>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>C:\boost\stage\lib;C:\vcpkg\installed\x64-windows\lib;C:\libtorch\lib;C:\opencv\build\x64\vc16\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>python311.lib;opencv_world4100.lib;opencv_world4100d.lib;c10.lib;c10_cuda.lib;torch.lib;torch_cpu.lib;torch_cuda.lib;caffe2_nvrtc.lib;C:\cuda\lib\x64\cublas.lib;C:\cuda\lib\x64\cudart.lib;C:\cuda\lib\x64\cufft.lib;C:\cuda\lib\x64\curand.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalOptions>/INCLUDE:"?ignore_this_library_placeholder@@YAHXZ" %(AdditionalOptions)</AdditionalOptions>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -138,10 +126,12 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;PASSLEARNING_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;PASSLEARNING_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\JHCHUN\AppData\Roaming\Python\Python311\site-packages\torch\include;C:\Users\JHCHUN\AppData\Roaming\Python\Python311\site-packages\torch\include\torch\csrc\api\include;C:\Program Files\Python311\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,6 +139,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>C:\Users\JHCHUN\AppData\Roaming\Python\Python311\site-packages\torch\lib;C:\Program Files\Python311\libs;C:\vcpkg\installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>python311.lib;c10.lib;c10_cuda.lib;torch.lib;torch_cpu.lib;torch_cuda.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -162,6 +154,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils\dataloader.hpp" />
     <ClInclude Include="utils\datasets.hpp" />
+    <ClInclude Include="utils\diffusion.h" />
     <ClInclude Include="utils\fastNoiseLite.h" />
     <ClInclude Include="utils\Logger.h" />
     <ClInclude Include="utils\losses.hpp" />
@@ -181,6 +174,7 @@
     </ClCompile>
     <ClCompile Include="utils\dataloader.cpp" />
     <ClCompile Include="utils\datasets.cpp" />
+    <ClCompile Include="utils\diffusion.cpp" />
     <ClCompile Include="utils\Logger.cpp" />
     <ClCompile Include="utils\losses.cpp" />
     <ClCompile Include="utils\progress.cpp" />

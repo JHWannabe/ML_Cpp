@@ -13,11 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="utils">
-      <UniqueIdentifier>{0bc51cf4-e330-454e-94ae-65eeafa63fb6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="model">
-      <UniqueIdentifier>{7e17d21d-1c46-4e54-b1d2-f7808abe07dc}</UniqueIdentifier>
+      <UniqueIdentifier>{aee22179-bbbc-43db-b3ff-2f2c5081fb53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{df88c725-f433-4670-99a4-61b7ae34706d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,16 +27,25 @@
     <ClInclude Include="pch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="pass_learning.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="model\de_Resnet.h">
+      <Filter>model</Filter>
     </ClInclude>
-    <ClInclude Include="ini.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="model\decoder.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\networks.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Resnet.h">
+      <Filter>model</Filter>
     </ClInclude>
     <ClInclude Include="utils\dataloader.hpp">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\datasets.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\fastNoiseLite.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\Logger.h">
@@ -48,28 +57,22 @@
     <ClInclude Include="utils\progress.hpp">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\transforms.hpp">
+    <ClInclude Include="utils\scheduler.hpp">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\visualizer.hpp">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="model\networks.h">
-      <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="model\decoder.h">
-      <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="model\Resnet.h">
-      <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="model\de_Resnet.h">
-      <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\scheduler.hpp">
+    <ClInclude Include="utils\diffusion.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="utils\fastNoiseLite.h">
+    <ClInclude Include="ini.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pass_learning.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\transforms.hpp">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
@@ -78,9 +81,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="pass_learning.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="utils\dataloader.cpp">
@@ -98,13 +98,19 @@
     <ClCompile Include="utils\progress.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\transforms.cpp">
+    <ClCompile Include="utils\scheduler.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="utils\visualizer.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="utils\scheduler.cpp">
+    <ClCompile Include="utils\diffusion.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="pass_learning.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\transforms.cpp">
       <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>

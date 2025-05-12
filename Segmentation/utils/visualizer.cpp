@@ -328,7 +328,7 @@ cv::Mat visualizer::draw_detections(const torch::Tensor image, const std::tuple<
             class_name = class_names.at(id);
             text_size = cv::getTextSize(class_name, cv::FONT_HERSHEY_SIMPLEX, /*fontScale=*/font_size, /*thickness=*/text_thickness, &baseline);
             cv::rectangle(sample, cv::Point(x_min, y_min), cv::Point(x_min + text_size.width + line_thickness, y_min + text_size.height + line_thickness + baseline), cv::Scalar(B, G, R), /*thickness=*/-1);
-            cv::putText(sample, class_name, cv::Point(x_min + line_thickness, y_min + 2 * baseline + line_thickness), cv::FONT_HERSHEY_SIMPLEX, /*fontScale=*/font_size, cv::Scalar(0, 0, 0), /*thickness=*/text_thickness, /*lineType=*/cv::LINE_8);
+            cv::putText(sample, class_name, cv::Point(x_min + line_thickness, y_min + 2 * baseline + line_thickness), cv::FONT_HERSHEY_SIMPLEX, /*fontScale=*/font_size, cv::Scalar(0, 0, 0), /*thickness=*/text_thickness, /*lineType=*/8);
 
         }
     }
@@ -441,7 +441,7 @@ cv::Mat visualizer::draw_detections_des(const torch::Tensor image, const std::tu
             class_name = class_names.at(id);
             text_size = cv::getTextSize(class_name, cv::FONT_HERSHEY_SIMPLEX, /*fontScale=*/font_size, /*thickness=*/text_thickness, &baseline);
             cv::rectangle(sample, cv::Point(x_min, y_min), cv::Point(x_min + text_size.width + line_thickness, y_min + text_size.height + line_thickness + baseline), cv::Scalar(B, G, R), /*thickness=*/-1);
-            cv::putText(sample, class_name, cv::Point(x_min + line_thickness, y_min + 2 * baseline + line_thickness), cv::FONT_HERSHEY_SIMPLEX, /*fontScale=*/font_size, cv::Scalar(0, 0, 0), /*thickness=*/text_thickness, /*lineType=*/cv::LINE_8);
+            cv::putText(sample, class_name, cv::Point(x_min + line_thickness, y_min + 2 * baseline + line_thickness), cv::FONT_HERSHEY_SIMPLEX, /*fontScale=*/font_size, cv::Scalar(0, 0, 0), /*thickness=*/text_thickness, /*lineType=*/8);
 
         }
     }

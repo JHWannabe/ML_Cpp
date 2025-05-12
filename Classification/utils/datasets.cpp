@@ -1,22 +1,4 @@
-#include <fstream>
-#include <filesystem>
-#include <string>
-#include <sstream>
-#include <tuple>
-#include <vector>
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-// For External Library
-#include <torch/torch.h>
-#include <opencv2/opencv.hpp>
-// #include <png.h>
-#include "../png++/png.hpp"
-// For Original Header
-#include "transforms.hpp"
 #include "datasets.hpp"
-
-namespace fs = std::filesystem;
 
 // -----------------------------------------------
 // namespace{datasets} -> function{collect}
@@ -148,7 +130,7 @@ std::tuple<torch::Tensor, torch::Tensor> datasets::BoundingBox_Loader(std::strin
     state = 0;
     while (fscanf(fp, "%ld %f %f %f %f", &id_data, &cx_data, &cy_data, &w_data, &h_data) != EOF){
 
-        id = torch::full({1}, id_data, torch::TensorOptions().dtype(torch::kLong));  // id{1}
+        id = torch::full({1}, static_cast<int64_t>(id_data), torch::TensorOptions().dtype(torch::kLong));  // id{1}
         cx = torch::full({1, 1}, cx_data, torch::TensorOptions().dtype(torch::kFloat));  // cx{1,1}
         cy = torch::full({1, 1}, cy_data, torch::TensorOptions().dtype(torch::kFloat));  // cy{1,1}
         w = torch::full({1, 1}, w_data, torch::TensorOptions().dtype(torch::kFloat));  // w{1,1}
@@ -497,7 +479,7 @@ datasets::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(const std::st
 void datasets::ImageFolderClassesWithPaths::get(const size_t idx, std::tuple<torch::Tensor, torch::Tensor, std::string>& data) {
     cv::Mat image_Mat = datasets::RGB_Loader(this->paths.at(idx));
     torch::Tensor image = transforms::apply(this->transform, image_Mat);  // Mat Image ==={Resize,ToTensor,etc.}===> Tensor Image
-    torch::Tensor class_id = torch::full({}, (long int)this->class_ids.at(idx), torch::TensorOptions().dtype(torch::kLong));
+    torch::Tensor class_id = torch::full({ 1 }, static_cast<int64_t>(this->class_ids.at(idx)), torch::TensorOptions().dtype(torch::kLong));
     std::string fname = this->fnames.at(idx);
     data = { image.detach().clone(), class_id.detach().clone(), fname };
     return;

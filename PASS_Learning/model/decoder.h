@@ -1,19 +1,17 @@
 #include <torch/torch.h>
 #include <torch/script.h>
 
-namespace nn = torch::nn;
-
-class UpConvBlock : public nn::Module
+class UpConvBlock : public torch::nn::Module
 {
-	nn::Sequential blk{ nullptr };
+	torch::nn::Sequential blk{ nullptr };
 public:
 	UpConvBlock(int in_channel, int out_channel)
 	{
-		nn::Sequential blk_(
-			nn::Upsample(nn::UpsampleOptions().scale_factor(std::vector<double>({ 2,2 })).mode(torch::kBilinear).align_corners(true)),
-			nn::Conv2d(nn::Conv2dOptions(in_channel, out_channel, 3).stride(1).padding(1)),
-			nn::BatchNorm2d(nn::BatchNorm2dOptions(out_channel)),
-			nn::ReLU(nn::ReLUOptions(false))
+		torch::nn::Sequential blk_(
+			torch::nn::Upsample(torch::nn::UpsampleOptions().scale_factor(std::vector<double>({ 2,2 })).mode(torch::kBilinear).align_corners(true)),
+			torch::nn::Conv2d(torch::nn::Conv2dOptions(in_channel, out_channel, 3).stride(1).padding(1)),
+			torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(out_channel)),
+			torch::nn::ReLU(torch::nn::ReLUOptions(false))
 		);
 		blk = register_module("blk", blk_.ptr());
 	}
@@ -24,25 +22,25 @@ public:
 	}
 };
 
-class Decoder : public nn::Module
+class Decoder : public torch::nn::Module
 {
-	nn::Conv2d conv{ nullptr };
-	nn::ModuleHolder<UpConvBlock> upconv3{ nullptr };
-	nn::ModuleHolder<UpConvBlock> upconv2{ nullptr };
-	nn::ModuleHolder<UpConvBlock> upconv1{ nullptr };
-	nn::ModuleHolder<UpConvBlock> upconv0{ nullptr };
-	nn::ModuleHolder<UpConvBlock> upconv2mask{ nullptr };
-	nn::Conv2d final_conv{ nullptr };
+	torch::nn::Conv2d conv{ nullptr };
+	torch::nn::ModuleHolder<UpConvBlock> upconv3{ nullptr };
+	torch::nn::ModuleHolder<UpConvBlock> upconv2{ nullptr };
+	torch::nn::ModuleHolder<UpConvBlock> upconv1{ nullptr };
+	torch::nn::ModuleHolder<UpConvBlock> upconv0{ nullptr };
+	torch::nn::ModuleHolder<UpConvBlock> upconv2mask{ nullptr };
+	torch::nn::Conv2d final_conv{ nullptr };
 public:
 	Decoder()
 	{
-		conv = nn::Conv2d(nn::Conv2dOptions(64, 48, 3).stride(1).padding(1));
+		conv = torch::nn::Conv2d(torch::nn::Conv2dOptions(64, 48, 3).stride(1).padding(1));
 		upconv3 = std::make_shared<UpConvBlock>(512, 256);
 		upconv2 = std::make_shared<UpConvBlock>(512, 128);
 		upconv1 = std::make_shared<UpConvBlock>(256, 64);
 		upconv0 = std::make_shared<UpConvBlock>(128, 48);
 		upconv2mask = std::make_shared<UpConvBlock>(96, 48);
-		final_conv = nn::Conv2d(nn::Conv2dOptions(48, 1, 3).stride(1).padding(1));
+		final_conv = torch::nn::Conv2d(torch::nn::Conv2dOptions(48, 1, 3).stride(1).padding(1));
 
 		register_module("conv", conv);
 		register_module("upconv3", upconv3);

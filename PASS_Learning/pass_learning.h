@@ -21,6 +21,8 @@
 #include <torch/torch.h>               // torch
 #include <opencv2/opencv.hpp>          // cv::Mat
 #include <boost/program_options.hpp>   // boost::program_options
+#include <c10/util/Exception.h>
+#include <pybind11/embed.h>    // gil_scoped_release
 
 // For Original Header
 #include "ini.h"
@@ -36,10 +38,7 @@
 // Define Namespace
 namespace fs = std::filesystem;
 namespace po = boost::program_options;
-
-// Define Namespace
-namespace fs = std::filesystem;
-namespace po = boost::program_options;
+namespace py = pybind11;
 
 // Function Prototype
 extern "C" PASSLEARNING_DECLSPEC int mainPASSLearning(int argc, const char* argv[], std::string file_path);

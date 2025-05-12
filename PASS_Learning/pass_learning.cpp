@@ -60,10 +60,8 @@ po::options_description parse_arguments() {
 // 1. Main Function
 // -----------------------------------
 int mainPASSLearning(int argc, const char* argv[], std::string file_path) {
-	if (!std::filesystem::exists(file_path))
-	{
-		return 1;
-	}
+	if (!std::filesystem::exists(file_path)) return 1;
+
 	mINI::INIFile file(file_path);
 	mINI::INIStructure ini;
 	// now we can read the file
@@ -103,15 +101,15 @@ int mainPASSLearning(int argc, const char* argv[], std::string file_path) {
 	// (4) Set Transforms
 	std::vector<transforms_Compose> imageTransform = {
 		transforms_ToTensor(),
-		transforms_Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+		transforms_Normalize(
+			std::vector<float>{0.485f, 0.456f, 0.406f},
+			std::vector<float>{0.229f, 0.224f, 0.225f}
+		)
 	};
 
 	std::vector<transforms_Compose> labelTransform = {
 		transforms_ToTensor()
 	};
-	if (std::stol(ini["General"]["input_channel"]) == 1) {
-		imageTransform.insert(imageTransform.begin(), transforms_Grayscale(1));
-	}
 
 	// (5) Define Network
 	std::shared_ptr<Supervised> Model = std::make_shared<Supervised>(ini);
@@ -335,7 +333,7 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 
 	// (1) Get Test Dataset
 	input_dir = ini["Test"]["test_dir"];
-	cv::Size resize = cv::Size(std::stol(ini["General"]["size_h"]), std::stol(ini["General"]["size_w"]));
+	cv::Size resize = cv::Size(std::stol(ini["General"]["size_w"]), std::stol(ini["General"]["size_h"]));
 
 	dataset = datasets::SegmentImageWithPaths(input_dir, imageTransform, labelTransform, "test", resize);
 	dataloader = DataLoader::SegmentImageWithPaths(dataset, /*batch_size_=*/1, /*shuffle_=*/false, /*num_workers_=*/0);
@@ -344,6 +342,7 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 	// (2) Get Model
 	path = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["mode"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
 	torch::load(model, path, device);
+	model->eval();
 
 	// (3) Initialization of Value
 	ave_loss = 0.0;
@@ -353,7 +352,6 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 	pixel_accuracy = 0.0;
 
 	// (4) Tensor Forward
-	model->eval();
 	result_dir = ini["Test"]["test_result_dir"];
 	fs::create_directories(result_dir);
 
@@ -370,11 +368,14 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 
 	ofs.open(result_dir + "/loss.txt", std::ios::out);
 	while (dataloader(data)) {
-
 		input = std::get<0>(data).to(device);
 		label = std::get<1>(data).to(device).squeeze();
 		fname = std::get<2>(data).at(0);
 		fname = fname.substr(0, fname.length() - 4);
+		size_t last_slash = fname.rfind('/');
+		if (last_slash != std::string::npos) {
+			fname = fname.substr(last_slash + 1);
+		}
 		yTrue = std::get<3>(data).at(0);
 		imgCv = std::get<4>(data).at(0);
 		labelCv = std::get<5>(data).at(0);
@@ -383,20 +384,30 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 		start = std::chrono::system_clock::now();
 
 		output = model->forward(input);
+		output = torch::sigmoid(output);
 
 		if (!device.is_cpu()) torch::cuda::synchronize();
 		end = std::chrono::system_clock::now();
 		seconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() * 0.001 * 0.001;
 
-		float threshold = 0.1;
 		// 3. CPU로 이동 + detach
 		torch::Tensor final_outputs = output.detach().to(torch::kCPU);
 		torch::Tensor final_segmap = final_outputs.squeeze();  // torch::Tensor [H, W]
 
 		// 5. threshold 적용
-		threshold = stod(ini["Test"]["threshold"]);
+		float threshold = stod(ini["Test"]["threshold"]);
 		torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
 		torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
+
+		//auto sub = final_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
+		//	.slice(1, 0, 5); // W축 0~4
+		//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
+		//	<< sub << "\n";
+
+		//sub = binary_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
+		//	.slice(1, 0, 5); // W축 0~4
+		//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
+		//	<< sub << "\n";
 
 		// 7. OpenCV로 변환
 		int height = combined_final_segmap.size(0);
@@ -410,8 +421,8 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 
 		// 3. 저장 디렉토리 결정
 		std::string save_dir;
-		if (yTrue == 0 && predicted_label == 1) save_dir = notfoundPath;
-		else if (yTrue == 1 && predicted_label == 1) save_dir = goodPath;
+		if (yTrue == 1 && predicted_label == 1) save_dir = goodPath;
+		else if (yTrue == 0 && predicted_label == 1) save_dir = notfoundPath;
 		else if (yTrue == 0 && predicted_label == 0) save_dir = ngPath;
 		else if (yTrue == 1 && predicted_label == 0) save_dir = overkillPath;
 
@@ -423,43 +434,43 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 		cv::imwrite(save_dir + "/" + fname + "_segmap.jpg", segmapCv);
 		cv::imwrite(save_dir + "/label/" + fname + "_label.jpg", labelCv);
 
-		// 둘 다 CV_8UC1인지 확인
-		CV_Assert(segmapCv.type() == CV_8UC1 && labelCv.type() == CV_8UC1);
-		CV_Assert(segmapCv.size() == labelCv.size());
+		//// 둘 다 CV_8UC1인지 확인
+		//CV_Assert(segmapCv.type() == CV_8UC1 && labelCv.type() == CV_8UC1);
+		//CV_Assert(segmapCv.size() == labelCv.size());
 
-		// 정확히 일치하는 픽셀 수 계산
-		cv::Mat match_mask;
-		cv::compare(segmapCv, labelCv, match_mask, cv::CMP_EQ); // 같으면 255, 다르면 0
-		int matched_pixels = cv::countNonZero(match_mask);
+		//// 정확히 일치하는 픽셀 수 계산
+		//cv::Mat match_mask;
+		//cv::compare(segmapCv, labelCv, match_mask, cv::CMP_EQ); // 같으면 255, 다르면 0
+		//int matched_pixels = cv::countNonZero(match_mask);
 
-		// 전체 픽셀 수
-		int total_pixels = segmapCv.rows * segmapCv.cols;
+		//// 전체 픽셀 수
+		//int total_pixels = segmapCv.rows * segmapCv.cols;
 
-		// 정확도 계산
-		pixel_accuracy = static_cast<double>(matched_pixels) / total_pixels;
+		//// 정확도 계산
+		//pixel_accuracy = static_cast<double>(matched_pixels) / total_pixels;
 
-		ave_pixel_wise_accuracy += pixel_accuracy;
-		ave_time += seconds;
+		//ave_pixel_wise_accuracy += pixel_accuracy;
+		//ave_time += seconds;
 
-		std::cout << '<' << std::get<2>(data).at(0) << "> pixel-wise-accuracy: " << pixel_accuracy << std::endl;
-		ofs << '<' << std::get<2>(data).at(0) << "> pixel-wise-accuracy: " << pixel_accuracy << std::endl;
+		//std::cout << '<' << std::get<2>(data).at(0) << "> pixel-wise-accuracy: " << pixel_accuracy << std::endl;
+		//ofs << '<' << std::get<2>(data).at(0) << "> pixel-wise-accuracy: " << pixel_accuracy << std::endl;
 	}
 
-	// (6) Calculate Average
-	ave_pixel_wise_accuracy = ave_pixel_wise_accuracy / (double)dataset.size();
-	ave_time = ave_time / (double)dataset.size();
+	//// (6) Calculate Average
+	//ave_pixel_wise_accuracy = ave_pixel_wise_accuracy / (double)dataset.size();
+	//ave_time = ave_time / (double)dataset.size();
 
-	// (7) Average Output
-	std::cout << "<All> pixel-wise-accuracy: " << ave_pixel_wise_accuracy << " (time:" << ave_time << ')' << std::endl;
-	ofs << "<All> pixel-wise-accuracy: " << ave_pixel_wise_accuracy << " (time:" << ave_time << ')' << std::endl;
+	//// (7) Average Output
+	//std::cout << "<All> pixel-wise-accuracy: " << ave_pixel_wise_accuracy << " (time:" << ave_time << ')' << std::endl;
+	//ofs << "<All> pixel-wise-accuracy: " << ave_pixel_wise_accuracy << " (time:" << ave_time << ')' << std::endl;
 
 	// (8) Calculate Confusion Matrix
 	auto cm = compute_confusion_matrix_from_dirs(goodPath, ngPath, overkillPath, notfoundPath);
 	Metrics m = compute_metrics_from_confusion_matrix(cm);
 
 	// (9) Print Confusion Matrix
-	std::cout << "Notfound: " << m.FN << "Recall: " << m.recall << ", F1-score: " << m.f1_score << std::endl;
-	ofs << "<All> Notfound: " << m.FN << "Recall: " << m.recall << ", F1-score: " << m.f1_score << std::endl;
+	std::cout << "Notfound: " << m.FN << ", Recall: " << m.recall << ", F1-score: " << m.f1_score << std::endl;
+	ofs << "<All> Notfound: " << m.FN << ", Recall: " << m.recall << ", F1-score: " << m.f1_score << std::endl;
 
 	// Post Processing
 	ofs.close();
@@ -512,15 +523,15 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	}
 
 	// (1) Get Training Dataset
-	cv::Size resize = cv::Size(std::stol(ini["General"]["size_h"]), std::stol(ini["General"]["size_w"]));
+	cv::Size resize = cv::Size(std::stol(ini["General"]["size_w"]), std::stol(ini["General"]["size_h"]));
 	dataset = datasets::SegmentImageWithPaths(input_dir, imageTransform, labelTransform, mode, resize);
 	dataloader = DataLoader::SegmentImageWithPaths(dataset, std::stol(ini["Training"]["batch_size"]), /*shuffle_=*/train_shuffle, /*num_workers_=*/train_workers);
 	std::cout << "total training images : " << dataset.size() << std::endl;
 
 	// (2) Get Validation Dataset
 	if (stringToBool(ini["Validation"]["valid"])) {
-		valid_input_dir = ini["Validation"]["valid_in_dir"];
-		valid_dataset = datasets::SegmentImageWithPaths(valid_input_dir, imageTransform, labelTransform, "valid", resize);
+		valid_input_dir = ini["Validation"]["valid_dir"];
+		valid_dataset = datasets::SegmentImageWithPaths(valid_input_dir, imageTransform, labelTransform, mode, resize);
 		valid_dataloader = DataLoader::SegmentImageWithPaths(valid_dataset, std::stol(ini["Validation"]["valid_batch_size"]), /*shuffle_=*/valid_shuffle, /*num_workers_=*/valid_workers);
 		std::cout << "total validation images : " << valid_dataset.size() << std::endl;
 	}
@@ -538,10 +549,9 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 
 	// (4) Set Loss Function
 	auto criterion = Loss();
-	torch::nn::L1Loss L1Loss = torch::nn::L1Loss(torch::nn::L1LossOptions().reduction(torch::kMean));
 
 	// (5) Make Directories
-	checkpoint_dir = "D:/DLL_Porting/PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + mode;
+	checkpoint_dir = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + mode;
 	path = checkpoint_dir + "/models";  fs::create_directories(path);
 	path = checkpoint_dir + "/optims";  fs::create_directories(path);
 	path = checkpoint_dir + "/log";  fs::create_directories(path);
@@ -566,8 +576,8 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	else {
 		path = checkpoint_dir + "/models/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(model, path, device);
 		std::cout << "Successfully loaded model from: " << path << std::endl;
-		path = checkpoint_dir + "/optims/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(optimizer, path, device);
-		std::cout << "Successfully loaded optimizer from: " << path << std::endl;
+		//path = checkpoint_dir + "/optims/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(optimizer, path, device);
+		//std::cout << "Successfully loaded optimizer from: " << path << std::endl;
 
 		ofs.open(checkpoint_dir + "/log/train.txt", std::ios::app);
 		ofs << std::endl << std::endl;
@@ -607,10 +617,13 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	// (2) Training per Epoch
 	irreg_progress.restart(start_epoch - 1, total_epoch);
 	for (epoch = start_epoch; epoch <= total_epoch; epoch++) {
-
 		model->train();
-		ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl << std::endl;
+		ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl;
 		show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "classify" });
+		std::cout << std::endl;
+
+		int count = 1;
+		optimizer.zero_grad();
 
 		// -----------------------------------
 		// b1. Mini Batch Learning
@@ -622,13 +635,60 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 			// -----------------------------------
 			image = std::get<0>(mini_batch).to(device);
 			label = std::get<1>(mini_batch).to(device);
-			output = model->forward(image);
+			cv::Mat imageCv = std::get<4>(mini_batch).at(0);
+			cv::Mat labelCv = std::get<5>(mini_batch).at(0);
+			output = model->forward(image).to(device);
 			output = torch::sigmoid(output);
+
+			//auto sub = output.squeeze(0).slice(0, 0, 5)   // H축 0~4
+			//	.slice(1, 0, 5); // W축 0~4
+			//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
+			//	<< sub << "\n";
+
 			loss = criterion(output, label, stof(ini["Training"]["l1_weight"]), stof(ini["Training"]["focal_weight"]));
-			loss.backward();
-			optimizer.step();
+
+			if (mode == "unsuper") {
+				py::gil_scoped_release no_gil;
+				loss.backward();
+				optimizer.step();
+			}
+			else if (mode == "super") {
+				loss.backward();
+				optimizer.step();
+			}
+
 			optimizer.zero_grad();
 			scheduler.step(epoch);
+
+			// 3. CPU로 이동 + detach
+			torch::Tensor final_outputs = output.detach().to(torch::kCPU);
+			torch::Tensor final_segmap = final_outputs.squeeze();  // torch::Tensor [H, W]
+
+			// 5. threshold 적용
+			float threshold = stod(ini["Test"]["threshold"]);
+			torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
+			torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
+
+			//auto sub = final_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
+			//	.slice(1, 0, 5); // W축 0~4
+			//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
+			//	<< sub << "\n";
+
+			//sub = binary_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
+			//	.slice(1, 0, 5); // W축 0~4
+			//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
+			//	<< sub << "\n";
+
+			// 7. OpenCV로 변환
+			int height = combined_final_segmap.size(0);
+			int width = combined_final_segmap.size(1);
+			combined_final_segmap = combined_final_segmap.contiguous();  // data_ptr 접근용
+			cv::Mat segmapCv(height, width, CV_8UC1, combined_final_segmap.data_ptr());
+
+			// 5. 저장
+			//cv::imwrite("segmap.jpg", segmapCv);
+			//cv::imwrite("seg_img.jpg", imageCv);
+			//cv::imwrite("seg_label.jpg", labelCv*255);
 
 			// -----------------------------------
 			// c2. Record Loss (iteration)
@@ -637,7 +697,25 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 			ofs << "iters:" << show_progress->get_iters() << '/' << total_iter << ' ' << std::flush;
 			ofs << "classify:" << loss.item<float>() << "(ave:" << show_progress->get_ave(0) << ')' << std::endl;
 
+			if (mode == "unsuper") {
+				if (count % std::stoi(ini["Training"]["unsuper_count"]) == 0) {
+					if (stringToBool(ini["Validation"]["valid"])) {
+						valid(ini, valid_dataloader, device, criterion, model, epoch, valid_loss);
+					}
+					path = checkpoint_dir + "/models/epoch_" + std::to_string(epoch) + "_" + std::to_string(count) + ".pth";  torch::save(model, path);
+					path = checkpoint_dir + "/optims/epoch_" + std::to_string(epoch) + "_" + std::to_string(count) + ".pth";  torch::save(optimizer, path);
+					path = checkpoint_dir + "/models/epoch_latest.pth";  torch::save(model, path);
+					path = checkpoint_dir + "/optims/epoch_latest.pth";  torch::save(optimizer, path);
+					infoo.open(checkpoint_dir + "/models/info.txt", std::ios::out);
+					infoo << "latest = " << epoch << std::endl;
+					infoo.close();
+				}
+			}
+			count++;
 		}
+
+		std::cout << "Epoch [" << epoch << "] Learning Rate: "
+			<< optimizer.param_groups()[0].options().get_lr() << std::endl;
 
 		// -----------------------------------
 		// b2. Record Loss (epoch)
@@ -761,7 +839,7 @@ void valid(mINI::INIStructure& ini, DataLoader::SegmentImageWithPaths& valid_dat
 	ave_mean_accuracy = total_mean_accuracy / (double)iteration;
 
 	// (3.1) Record Loss (Log)
-	ofs.open("../Segmentation/checkpoints/" + ini["General"]["dataset"] + "/log/valid.txt", std::ios::app);
+	ofs.open("D:/Cpp/DLL_Porting/PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/log/valid.txt", std::ios::app);
 	ofs << "epoch:" << epoch << '/' << std::stol(ini["Training"]["epochs"]) << ' ' << std::flush;
 	ofs << "classify:" << ave_loss << ' ' << std::flush;
 	ofs << "pixel-wise-accuracy:" << ave_pixel_wise_accuracy << ' ' << std::flush;

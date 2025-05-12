@@ -21,6 +21,7 @@
 #include <torch/torch.h>               // torch
 #include <torch/script.h>
 #include <opencv2/opencv.hpp>          // cv::Mat
+#include <opencv2/videoio.hpp>
 #include <boost/program_options.hpp>   // boost::program_options
 
 // For Original Header

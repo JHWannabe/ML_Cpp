@@ -85,7 +85,7 @@ bool DataLoader::SegmentImageWithPaths::operator()(std::tuple<torch::Tensor, tor
     // (2.2) Get Mini Batch Data using Multi Thread
     else {
         omp_set_num_threads(this->num_workers);
-#pragma omp parallel for
+        #pragma omp parallel for
         for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }

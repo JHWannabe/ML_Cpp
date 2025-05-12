@@ -1,14 +1,23 @@
 #ifndef DATASETS_HPP
 #define DATASETS_HPP
 
+#include <fstream>
+#include <filesystem>
 #include <string>
+#include <sstream>
 #include <tuple>
 #include <vector>
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include "../png++/png.hpp"
 // For External Library
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
 // For Original Header
 #include "transforms.hpp"
+
+namespace fs = std::filesystem;
 
 
 // -----------------------

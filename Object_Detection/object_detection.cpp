@@ -736,6 +736,7 @@ void train(mINI::INIStructure& ini, torch::Device& device, YOLOv3& model, std::v
         model->train();
         ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl;
         show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "coord_xy", "coord_wh", "conf_o", "conf_x", "class", "W", "H" });
+        std::cout << std::endl;
 
         // -----------------------------------
         // b1. Mini Batch Learning
@@ -959,7 +960,7 @@ void valid(mINI::INIStructure& ini, DataLoader::ImageFolderBBWithPaths& valid_da
         losses = criterion(output, label, { (float)image.size(3), (float)image.size(2) });
 
         loss_coord_xy = std::get<0>(losses) * std::stof(ini["Network"]["Lambda_coord"]);
-        loss_coord_wh = std::get<1>(losses) * std::stol(ini["Network"]["Lambda_coord"]);
+        loss_coord_wh = std::get<1>(losses) * static_cast<float>(std::stol(ini["Network"]["Lambda_coord"]));
         loss_obj = std::get<2>(losses) * std::stof(ini["Network"]["Lambda_object"]);
         loss_noobj = std::get<3>(losses) * std::stof(ini["Network"]["Lambda_noobject"]);
         loss_class = std::get<4>(losses) * std::stof(ini["Network"]["Lambda_class"]);
