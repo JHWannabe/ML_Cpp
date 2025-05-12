@@ -1,0 +1,525 @@
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                                produce help message
+  --dataset arg                         dataset name
+  --class_list arg (=list/ImageNet.txt) file name in which class names are listed
+  --class_num arg (=1000)               total classes
+  --size arg (=224)                     image width and height
+  --nc arg (=3)                         input image channel : RGB=3, grayscale=1
+  --gpu_id arg (=0)                     cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)                whether to make the seed of random number in a random
+  --seed arg (=0)                       seed of random number
+  --train arg (=0)                      training mode on/off
+  --train_dir arg (=train)              training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>
+  --epochs arg (=200)                   training total epoch
+  --batch_size arg (=32)                training batch size
+  --train_load_epoch arg                epoch of model to resume learning
+  --save_epoch arg (=20)                frequency of epoch to save model and optimizer
+  --valid arg (=0)                      validation mode on/off
+  --valid_dir arg (=valid)              validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>
+  --valid_batch_size arg (=1)           validation batch size
+  --valid_freq arg (=1)                 validation frequency to training epoch
+  --test arg (=0)                       test mode on/off
+  --test_dir arg (=test)                test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>
+  --test_load_epoch arg (=latest)       training epoch used for testing
+  --test_result_dir arg (=test_result)  test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)            learning rate
+  --beta1 arg (=0.5)                    beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)            beta 2 in Adam of optimizer method
+  --nf arg (=64)                        the number of filters in convolution layer closest to image
+  --n_layers arg                        the number of layer in model
+
+--------------------------------------------
+

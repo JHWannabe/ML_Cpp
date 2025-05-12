@@ -1,0 +1,114 @@
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                               produce help message
+  --dataset arg                        dataset name
+  --size arg (=256)                    image width and height (x>=64)
+  --nc arg (=3)                        input image channel : RGB=3, grayscale=1
+  --nz arg (=512)                      dimensions of latent space
+  --class_num arg (=256)               total classes
+  --gpu_id arg (=0)                    cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)               whether to make the seed of random number in a random
+  --seed arg (=0)                      seed of random number
+  --train arg (=0)                     training mode on/off
+  --train_in_dir arg (=trainI)         training input image directory : ./datasets/<dataset>/<train_in_dir>/<image files>
+  --train_out_dir arg (=trainO)        training output image directory : ./datasets/<dataset>/<train_out_dir>/<image files>
+  --epochs arg (=200)                  training total epoch
+  --batch_size arg (=32)               training batch size
+  --train_load_epoch arg               epoch of model to resume learning
+  --save_epoch arg (=20)               frequency of epoch to save model and optimizer
+  --valid arg (=0)                     validation mode on/off
+  --valid_in_dir arg (=validI)         validation input image directory : ./datasets/<dataset>/<valid_in_dir>/<image files>
+  --valid_out_dir arg (=validO)        validation output image directory : ./datasets/<dataset>/<valid_out_dir>/<image files>
+  --valid_batch_size arg (=1)          validation batch size
+  --valid_freq arg (=1)                validation frequency to training epoch
+  --test arg (=0)                      test mode on/off
+  --test_in_dir arg (=testI)           test input image directory : ./datasets/<dataset>/<test_in_dir>/<image files>
+  --test_out_dir arg (=testO)          test output image directory : ./datasets/<dataset>/<test_out_dir>/<image files>
+  --test_load_epoch arg (=latest)      training epoch used for testing
+  --test_result_dir arg (=test_result) test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)           learning rate
+  --beta1 arg (=0.5)                   beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)           beta 2 in Adam of optimizer method
+  --nf arg (=64)                       the number of filters in convolution layer closest to image
+  --no_dropout arg (=0)                Dropout off/on
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                               produce help message
+  --dataset arg                        dataset name
+  --size arg (=256)                    image width and height (x>=64)
+  --nc arg (=3)                        input image channel : RGB=3, grayscale=1
+  --nz arg (=512)                      dimensions of latent space
+  --class_num arg (=256)               total classes
+  --gpu_id arg (=0)                    cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)               whether to make the seed of random number in a random
+  --seed arg (=0)                      seed of random number
+  --train arg (=0)                     training mode on/off
+  --train_in_dir arg (=trainI)         training input image directory : ./datasets/<dataset>/<train_in_dir>/<image files>
+  --train_out_dir arg (=trainO)        training output image directory : ./datasets/<dataset>/<train_out_dir>/<image files>
+  --epochs arg (=200)                  training total epoch
+  --batch_size arg (=32)               training batch size
+  --train_load_epoch arg               epoch of model to resume learning
+  --save_epoch arg (=20)               frequency of epoch to save model and optimizer
+  --valid arg (=0)                     validation mode on/off
+  --valid_in_dir arg (=validI)         validation input image directory : ./datasets/<dataset>/<valid_in_dir>/<image files>
+  --valid_out_dir arg (=validO)        validation output image directory : ./datasets/<dataset>/<valid_out_dir>/<image files>
+  --valid_batch_size arg (=1)          validation batch size
+  --valid_freq arg (=1)                validation frequency to training epoch
+  --test arg (=0)                      test mode on/off
+  --test_in_dir arg (=testI)           test input image directory : ./datasets/<dataset>/<test_in_dir>/<image files>
+  --test_out_dir arg (=testO)          test output image directory : ./datasets/<dataset>/<test_out_dir>/<image files>
+  --test_load_epoch arg (=latest)      training epoch used for testing
+  --test_result_dir arg (=test_result) test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)           learning rate
+  --beta1 arg (=0.5)                   beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)           beta 2 in Adam of optimizer method
+  --nf arg (=64)                       the number of filters in convolution layer closest to image
+  --no_dropout arg (=0)                Dropout off/on
+
+--------------------------------------------
+
+--------------------------------------------
+Command Line Arguments:
+--------------------------------------------
+Options:
+  --help                               produce help message
+  --dataset arg                        dataset name
+  --size arg (=256)                    image width and height (x>=64)
+  --nc arg (=3)                        input image channel : RGB=3, grayscale=1
+  --nz arg (=512)                      dimensions of latent space
+  --class_num arg (=256)               total classes
+  --gpu_id arg (=0)                    cuda device : 'x=-1' is cpu device
+  --seed_random arg (=0)               whether to make the seed of random number in a random
+  --seed arg (=0)                      seed of random number
+  --train arg (=0)                     training mode on/off
+  --train_in_dir arg (=trainI)         training input image directory : ./datasets/<dataset>/<train_in_dir>/<image files>
+  --train_out_dir arg (=trainO)        training output image directory : ./datasets/<dataset>/<train_out_dir>/<image files>
+  --epochs arg (=200)                  training total epoch
+  --batch_size arg (=32)               training batch size
+  --train_load_epoch arg               epoch of model to resume learning
+  --save_epoch arg (=20)               frequency of epoch to save model and optimizer
+  --valid arg (=0)                     validation mode on/off
+  --valid_in_dir arg (=validI)         validation input image directory : ./datasets/<dataset>/<valid_in_dir>/<image files>
+  --valid_out_dir arg (=validO)        validation output image directory : ./datasets/<dataset>/<valid_out_dir>/<image files>
+  --valid_batch_size arg (=1)          validation batch size
+  --valid_freq arg (=1)                validation frequency to training epoch
+  --test arg (=0)                      test mode on/off
+  --test_in_dir arg (=testI)           test input image directory : ./datasets/<dataset>/<test_in_dir>/<image files>
+  --test_out_dir arg (=testO)          test output image directory : ./datasets/<dataset>/<test_out_dir>/<image files>
+  --test_load_epoch arg (=latest)      training epoch used for testing
+  --test_result_dir arg (=test_result) test result directory : ./<test_result_dir>
+  --lr arg (=9.99999975e-05)           learning rate
+  --beta1 arg (=0.5)                   beta 1 in Adam of optimizer method
+  --beta2 arg (=0.999000013)           beta 2 in Adam of optimizer method
+  --nf arg (=64)                       the number of filters in convolution layer closest to image
+  --no_dropout arg (=0)                Dropout off/on
+
+--------------------------------------------
+

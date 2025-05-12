@@ -1,0 +1,633 @@
+Total number of parameters : 61.626M
+
+YOLOv3Impl(
+  (stage1): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(3, 32, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(32, 64, kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (2): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(64, 32, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(32, 64, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (3): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(64, 128, kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (4): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 64, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(64, 128, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (5): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 64, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(64, 128, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (6): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (7): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (8): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (9): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (10): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (11): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (12): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (13): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (14): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+  )
+  (stage2): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (2): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (3): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (4): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (5): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (6): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (7): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (8): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+  )
+  (stage3): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (2): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (3): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (4): ResBlockImpl(
+      (ResBlock): torch::nn::Sequential(
+        (0): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+        (1): ConvBlockImpl(
+          (ConvBlock): torch::nn::Sequential(
+            (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+            (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+            (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+          )
+        )
+      )
+    )
+    (5): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (6): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (7): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (8): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (9): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(1024, 512, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+  )
+  (stage4): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+  )
+  (stage5): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(768, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (2): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (3): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (4): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 256, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+  )
+  (stage6): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+  )
+  (stageA): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 1024, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(1024, 75, kernel_size=[1, 1], stride=[1, 1])
+      )
+    )
+  )
+  (stageB): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 512, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(512, 75, kernel_size=[1, 1], stride=[1, 1])
+      )
+    )
+  )
+  (stageC): torch::nn::Sequential(
+    (0): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(384, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (1): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (2): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (3): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (4): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 128, kernel_size=[1, 1], stride=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (5): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(128, 256, kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], bias=false)
+        (1): torch::nn::BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=true, track_running_stats=true)
+        (2): torch::nn::LeakyReLU(negative_slope=0.1, inplace=true)
+      )
+    )
+    (6): ConvBlockImpl(
+      (ConvBlock): torch::nn::Sequential(
+        (0): torch::nn::Conv2d(256, 75, kernel_size=[1, 1], stride=[1, 1])
+      )
+    )
+  )
+)
