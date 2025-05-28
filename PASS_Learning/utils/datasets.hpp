@@ -40,10 +40,14 @@ namespace datasets {
     // namespace{datasets} -> class{Augmentation}
     // ----------------------------------------------------
     class Augmentation {
+    private:
+        int grid_size = 8;
+        cv::Size resize;
     public:
-        std::tuple<cv::Mat, cv::Mat> generateAnomaly(std::string file_path);
+        std::tuple<cv::Mat, cv::Mat> generateAnomaly(std::string& file_path, cv::Size resize);
         cv::Mat generatePerlinNoise(cv::Mat& img);
         cv::Mat generatePerlinNoise2D(int width, int height, int res_x, int res_y);
+        cv::Mat rand_augment(cv::Mat& img);
     };
 
     // ----------------------------------------------------
@@ -53,7 +57,6 @@ namespace datasets {
     private:
         int y_true = 1;
         std::string mode;
-        bool anomaly = true;
         std::vector<transforms_Compose> imageTransform, labelTransform;
         std::vector<std::string> paths, fnames;
         cv::Size resize;

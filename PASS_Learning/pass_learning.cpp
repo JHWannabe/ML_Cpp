@@ -399,16 +399,6 @@ void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Superv
 		torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
 		torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
 
-		//auto sub = final_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
-		//	.slice(1, 0, 5); // W축 0~4
-		//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
-		//	<< sub << "\n";
-
-		//sub = binary_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
-		//	.slice(1, 0, 5); // W축 0~4
-		//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
-		//	<< sub << "\n";
-
 		// 7. OpenCV로 변환
 		int height = combined_final_segmap.size(0);
 		int width = combined_final_segmap.size(1);
@@ -576,8 +566,8 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	else {
 		path = checkpoint_dir + "/models/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(model, path, device);
 		std::cout << "Successfully loaded model from: " << path << std::endl;
-		//path = checkpoint_dir + "/optims/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(optimizer, path, device);
-		//std::cout << "Successfully loaded optimizer from: " << path << std::endl;
+		path = checkpoint_dir + "/optims/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(optimizer, path, device);
+		std::cout << "Successfully loaded optimizer from: " << path << std::endl;
 
 		ofs.open(checkpoint_dir + "/log/train.txt", std::ios::app);
 		ofs << std::endl << std::endl;
@@ -637,15 +627,25 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 			label = std::get<1>(mini_batch).to(device);
 			cv::Mat imageCv = std::get<4>(mini_batch).at(0);
 			cv::Mat labelCv = std::get<5>(mini_batch).at(0);
-			output = model->forward(image).to(device);
+
+			int patchSize = 512;
+			int stride = 256;
+			int B = image.size(0);
+			int C = image.size(1);
+			int H = image.size(2);
+			int W = image.size(3);
+
+			torch::Tensor input_patches = image.unfold(2, patchSize, stride).unfold(3, patchSize, stride);
+			torch::Tensor label_patches = label.unfold(1, patchSize, stride).unfold(2, patchSize, stride);
+
+			input_patches = input_patches.permute({ 0, 2, 3, 1, 4, 5 }).contiguous();
+			input_patches = input_patches.view({ -1, C, patchSize, patchSize });
+			label_patches = label_patches.contiguous().view({-1, patchSize, patchSize});
+
+			output = model->forward(input_patches).to(device);
 			output = torch::sigmoid(output);
 
-			//auto sub = output.squeeze(0).slice(0, 0, 5)   // H축 0~4
-			//	.slice(1, 0, 5); // W축 0~4
-			//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
-			//	<< sub << "\n";
-
-			loss = criterion(output, label, stof(ini["Training"]["l1_weight"]), stof(ini["Training"]["focal_weight"]));
+			loss = criterion(output, label_patches, stof(ini["Training"]["l1_weight"]), stof(ini["Training"]["focal_weight"]));
 
 			if (mode == "unsuper") {
 				py::gil_scoped_release no_gil;
@@ -660,24 +660,42 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 			optimizer.zero_grad();
 			scheduler.step(epoch);
 
+			//for (int i = 0; i < output.size(0); i++) {
+			//	// 3. CPU로 이동 + detach
+			//	torch::Tensor final_outputs = output[i].detach().to(torch::kCPU);
+			//	torch::Tensor final_segmap = final_outputs.squeeze();  // torch::Tensor [H, W]
+
+			//	// 5. threshold 적용
+			//	float threshold = stod(ini["Test"]["threshold"]);
+			//	torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
+			//	torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
+
+			//	// 7. OpenCV로 변환
+			//	int height = combined_final_segmap.size(0);
+			//	int width = combined_final_segmap.size(1);
+			//	combined_final_segmap = combined_final_segmap.contiguous();  // data_ptr 접근용
+			//	cv::Mat segmapCv(height, width, CV_8UC1, combined_final_segmap.data_ptr());
+
+			//	// 5. 저장
+			//	cv::imwrite("segmap_"+ std::to_string(i) + ".jpg", segmapCv);
+			//}
+
+			torch::Tensor final_outputs = torch::cat(output, 0);
+			torch::Tensor final_outputs_flat = final_outputs.reshape({ B, -1, patchSize * patchSize }).permute({ 0, 2, 1 });
+
+			torch::Tensor reconstructed = torch::nn::functional::fold(
+				final_outputs_flat,
+				torch::nn::functional::FoldFuncOptions({ H, W }, { patchSize, patchSize }).stride({ stride, stride })
+			);
+
 			// 3. CPU로 이동 + detach
-			torch::Tensor final_outputs = output.detach().to(torch::kCPU);
+			final_outputs = reconstructed.detach().to(torch::kCPU);
 			torch::Tensor final_segmap = final_outputs.squeeze();  // torch::Tensor [H, W]
 
 			// 5. threshold 적용
 			float threshold = stod(ini["Test"]["threshold"]);
 			torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
 			torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
-
-			//auto sub = final_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
-			//	.slice(1, 0, 5); // W축 0~4
-			//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
-			//	<< sub << "\n";
-
-			//sub = binary_segmap.squeeze(0).slice(0, 0, 5)   // H축 0~4
-			//	.slice(1, 0, 5); // W축 0~4
-			//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
-			//	<< sub << "\n";
 
 			// 7. OpenCV로 변환
 			int height = combined_final_segmap.size(0);
@@ -686,9 +704,10 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 			cv::Mat segmapCv(height, width, CV_8UC1, combined_final_segmap.data_ptr());
 
 			// 5. 저장
-			//cv::imwrite("segmap.jpg", segmapCv);
-			//cv::imwrite("seg_img.jpg", imageCv);
-			//cv::imwrite("seg_label.jpg", labelCv*255);
+			cv::imwrite("segmap.jpg", segmapCv);
+
+			cv::imwrite("seg_img.jpg", imageCv);
+			cv::imwrite("seg_label.jpg", labelCv * 255);
 
 			// -----------------------------------
 			// c2. Record Loss (iteration)
@@ -775,6 +794,286 @@ void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Super
 	// End Processing
 	return;
 }
+
+//void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform) {
+//
+//	constexpr bool train_shuffle = true;  // whether to shuffle the training dataset
+//	constexpr size_t train_workers = 4;  // the number of workers to retrieve data from the training dataset
+//	constexpr bool valid_shuffle = true;  // whether to shuffle the validation dataset
+//	constexpr size_t valid_workers = 4;  // the number of workers to retrieve data from the validation dataset
+//
+//	// -----------------------------------
+//	// a0. Initialization and Declaration
+//	// -----------------------------------
+//
+//	size_t epoch, total_iter, start_epoch, total_epoch;
+//	std::string mode, date, date_out, buff, latest;
+//	std::string checkpoint_dir, path, input_dir, valid_input_dir;
+//	std::stringstream ss;
+//	std::ifstream infoi;
+//	std::ofstream ofs, init, infoo;
+//	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<int>, std::vector<cv::Mat>, std::vector<cv::Mat>> mini_batch;
+//	torch::Tensor loss, image, label, output;
+//	datasets::SegmentImageWithPaths dataset, valid_dataset;
+//	DataLoader::SegmentImageWithPaths dataloader, valid_dataloader;
+//	visualizer::graph train_loss, valid_loss;
+//	progress::display* show_progress;
+//	progress::irregular irreg_progress;
+//
+//
+//	// -----------------------------------
+//	// a1. Preparation
+//	// -----------------------------------
+//
+//	// (0) Mode Setting
+//	mode = ini["Training"]["mode"];
+//	std::cout << "train mode : " << mode << " [super|unsuper]" << std::endl;
+//	if (mode == "super") {
+//		input_dir = ini["Training"]["train_super_dir"];
+//	}
+//	else if (mode == "unsuper") {
+//		input_dir = ini["Training"]["train_unsuper_dir"];
+//	}
+//
+//	// (1) Get Training Dataset
+//	cv::Size resize = cv::Size(std::stol(ini["General"]["size_w"]), std::stol(ini["General"]["size_h"]));
+//	dataset = datasets::SegmentImageWithPaths(input_dir, imageTransform, labelTransform, mode, resize);
+//	dataloader = DataLoader::SegmentImageWithPaths(dataset, std::stol(ini["Training"]["batch_size"]), /*shuffle_=*/train_shuffle, /*num_workers_=*/train_workers);
+//	std::cout << "total training images : " << dataset.size() << std::endl;
+//
+//	// (2) Get Validation Dataset
+//	if (stringToBool(ini["Validation"]["valid"])) {
+//		valid_input_dir = ini["Validation"]["valid_dir"];
+//		valid_dataset = datasets::SegmentImageWithPaths(valid_input_dir, imageTransform, labelTransform, mode, resize);
+//		valid_dataloader = DataLoader::SegmentImageWithPaths(valid_dataset, std::stol(ini["Validation"]["valid_batch_size"]), /*shuffle_=*/valid_shuffle, /*num_workers_=*/valid_workers);
+//		std::cout << "total validation images : " << valid_dataset.size() << std::endl;
+//	}
+//
+//	// (3) Set Optimizer Method and Scheduler
+//	auto optimizer = torch::optim::AdamW(model->parameters(), torch::optim::AdamWOptions(std::stof(ini["Network"]["lr"])).betas({ std::stof(ini["Network"]["beta1"]), std::stof(ini["Network"]["beta2"]) }));
+//
+//	CosineAnnealingWarmupRestarts scheduler = CosineAnnealingWarmupRestarts(
+//		optimizer,
+//		std::stoi(ini["Training"]["epochs"]),
+//		std::stof(ini["Network"]["lr"]),
+//		std::stof(ini["Network"]["min_lr"]),
+//		int(std::stoi(ini["Training"]["epochs"]) * std::stof(ini["Network"]["warmup_ratio"]))
+//	);
+//
+//	// (4) Set Loss Function
+//	auto criterion = Loss();
+//
+//	// (5) Make Directories
+//	checkpoint_dir = "../PASS_Learning/checkpoints/" + ini["General"]["dataset"] + "/" + mode;
+//	path = checkpoint_dir + "/models";  fs::create_directories(path);
+//	path = checkpoint_dir + "/optims";  fs::create_directories(path);
+//	path = checkpoint_dir + "/log";  fs::create_directories(path);
+//
+//	// (6) Set Training Loss for Graph
+//	path = checkpoint_dir + "/graph";
+//	train_loss = visualizer::graph(path, /*gname_=*/"train_loss", /*label_=*/{ "PASS Learning" });
+//	if (stringToBool(ini["Validation"]["valid"])) {
+//		valid_loss = visualizer::graph(path, /*gname_=*/"valid_loss", /*label_=*/{ "PASS Learning" });
+//	}
+//
+//	// (7) Get Weights and File Processing
+//	if (ini["Training"]["train_load_epoch"] == "") {
+//		model->apply(weights_init);
+//		ofs.open(checkpoint_dir + "/log/train.txt", std::ios::out);
+//		if (stringToBool(ini["Validation"]["valid"])) {
+//			init.open(checkpoint_dir + "/log/valid.txt", std::ios::trunc);
+//			init.close();
+//		}
+//		start_epoch = 0;
+//	}
+//	else {
+//		path = checkpoint_dir + "/models/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(model, path, device);
+//		std::cout << "Successfully loaded model from: " << path << std::endl;
+//		path = checkpoint_dir + "/optims/epoch_" + ini["Training"]["train_load_epoch"] + ".pth";  torch::load(optimizer, path, device);
+//		std::cout << "Successfully loaded optimizer from: " << path << std::endl;
+//
+//		ofs.open(checkpoint_dir + "/log/train.txt", std::ios::app);
+//		ofs << std::endl << std::endl;
+//		if (ini["Training"]["train_load_epoch"] == "latest") {
+//			infoi.open(checkpoint_dir + "/models/info.txt", std::ios::in);
+//			std::getline(infoi, buff);
+//			infoi.close();
+//			latest = "";
+//			for (auto& c : buff) {
+//				if (('0' <= c) && (c <= '9')) {
+//					latest += c;
+//				}
+//			}
+//			start_epoch = std::stoi(latest);
+//		}
+//		else {
+//			start_epoch = std::stoi(ini["Training"]["train_load_epoch"]);
+//		}
+//	}
+//
+//	// (8) Display Date
+//	date = progress::current_date();
+//	date = progress::separator_center("Train Loss (" + date + ")");
+//	std::cout << std::endl << std::endl << date << std::endl;
+//	ofs << date << std::endl;
+//
+//
+//	// -----------------------------------
+//	// a2. Training Model
+//	// -----------------------------------
+//
+//	// (1) Set Parameters
+//	start_epoch++;
+//	total_iter = dataloader.get_count_max();
+//	total_epoch = std::stol(ini["Training"]["epochs"]);
+//
+//	// (2) Training per Epoch
+//	irreg_progress.restart(start_epoch - 1, total_epoch);
+//	for (epoch = start_epoch; epoch <= total_epoch; epoch++) {
+//		model->train();
+//		ofs << std::endl << "epoch:" << epoch << '/' << total_epoch << std::endl;
+//		show_progress = new progress::display(/*count_max_=*/total_iter, /*epoch=*/{ epoch, total_epoch }, /*loss_=*/{ "classify" });
+//		std::cout << std::endl;
+//
+//		int count = 1;
+//		optimizer.zero_grad();
+//
+//		// -----------------------------------
+//		// b1. Mini Batch Learning
+//		// -----------------------------------
+//		while (dataloader(mini_batch)) {
+//
+//			// -----------------------------------
+//			// c1. U-Net Training Phase
+//			// -----------------------------------
+//			image = std::get<0>(mini_batch).to(device);
+//			label = std::get<1>(mini_batch).to(device);
+//			cv::Mat imageCv = std::get<4>(mini_batch).at(0);
+//			cv::Mat labelCv = std::get<5>(mini_batch).at(0);
+//			output = model->forward(image).to(device);
+//			output = torch::sigmoid(output);
+//
+//			loss = criterion(output, label, stof(ini["Training"]["l1_weight"]), stof(ini["Training"]["focal_weight"]));
+//
+//			if (mode == "unsuper") {
+//				py::gil_scoped_release no_gil;
+//				loss.backward();
+//				optimizer.step();
+//			}
+//			else if (mode == "super") {
+//				loss.backward();
+//				optimizer.step();
+//			}
+//
+//			optimizer.zero_grad();
+//			scheduler.step(epoch);
+//
+//			// 3. CPU로 이동 + detach
+//			torch::Tensor final_outputs = output.detach().to(torch::kCPU);
+//			torch::Tensor final_segmap = final_outputs.squeeze();  // torch::Tensor [H, W]
+//
+//			// 5. threshold 적용
+//			float threshold = stod(ini["Test"]["threshold"]);
+//			torch::Tensor binary_segmap = (final_segmap > threshold).to(torch::kUInt8);  // [H, W], 값은 0 또는 1
+//			torch::Tensor combined_final_segmap = binary_segmap * 255;  // [H, W], 값은 0 또는 255
+//
+//			// 7. OpenCV로 변환
+//			int height = combined_final_segmap.size(0);
+//			int width = combined_final_segmap.size(1);
+//			combined_final_segmap = combined_final_segmap.contiguous();  // data_ptr 접근용
+//			cv::Mat segmapCv(height, width, CV_8UC1, combined_final_segmap.data_ptr());
+//
+//			// 5. 저장
+//			cv::imwrite("segmap.jpg", segmapCv);
+//			cv::imwrite("seg_img.jpg", imageCv);
+//			cv::imwrite("seg_label.jpg", labelCv);
+//
+//			// -----------------------------------
+//			// c2. Record Loss (iteration)
+//			// -----------------------------------
+//			show_progress->increment(/*loss_value=*/{ loss.item<float>() });
+//			ofs << "iters:" << show_progress->get_iters() << '/' << total_iter << ' ' << std::flush;
+//			ofs << "classify:" << loss.item<float>() << "(ave:" << show_progress->get_ave(0) << ')' << std::endl;
+//
+//			if (mode == "unsuper") {
+//				if (count % std::stoi(ini["Training"]["unsuper_count"]) == 0) {
+//					if (stringToBool(ini["Validation"]["valid"])) {
+//						valid(ini, valid_dataloader, device, criterion, model, epoch, valid_loss);
+//					}
+//					path = checkpoint_dir + "/models/epoch_" + std::to_string(epoch) + "_" + std::to_string(count) + ".pth";  torch::save(model, path);
+//					path = checkpoint_dir + "/optims/epoch_" + std::to_string(epoch) + "_" + std::to_string(count) + ".pth";  torch::save(optimizer, path);
+//					path = checkpoint_dir + "/models/epoch_latest.pth";  torch::save(model, path);
+//					path = checkpoint_dir + "/optims/epoch_latest.pth";  torch::save(optimizer, path);
+//					infoo.open(checkpoint_dir + "/models/info.txt", std::ios::out);
+//					infoo << "latest = " << epoch << std::endl;
+//					infoo.close();
+//				}
+//			}
+//			count++;
+//		}
+//
+//		std::cout << "Epoch [" << epoch << "] Learning Rate: "
+//			<< optimizer.param_groups()[0].options().get_lr() << std::endl;
+//
+//		// -----------------------------------
+//		// b2. Record Loss (epoch)
+//		// -----------------------------------
+//		train_loss.plot(/*base=*/epoch, /*value=*/show_progress->get_ave());
+//
+//
+//		// -----------------------------------
+//		// b4. Validation Mode
+//		// -----------------------------------
+//		if (stringToBool(ini["Validation"]["valid"]) && ((epoch - 1) % std::stol(ini["Validation"]["valid_freq"]) == 0)) {
+//			valid(ini, valid_dataloader, device, criterion, model, epoch, valid_loss);
+//		}
+//
+//		// -----------------------------------
+//		// b5. Save Model Weights and Optimizer Parameters
+//		// -----------------------------------
+//		if (epoch % std::stol(ini["Training"]["save_epoch"]) == 0) {
+//			path = checkpoint_dir + "/models/epoch_" + std::to_string(epoch) + ".pth";  torch::save(model, path);
+//			path = checkpoint_dir + "/optims/epoch_" + std::to_string(epoch) + ".pth";  torch::save(optimizer, path);
+//		}
+//		path = checkpoint_dir + "/models/epoch_latest.pth";  torch::save(model, path);
+//		path = checkpoint_dir + "/optims/epoch_latest.pth";  torch::save(optimizer, path);
+//		infoo.open(checkpoint_dir + "/models/info.txt", std::ios::out);
+//		infoo << "latest = " << epoch << std::endl;
+//		infoo.close();
+//
+//		// -----------------------------------
+//		// b6. Show Elapsed Time
+//		// -----------------------------------
+//		if (epoch % 10 == 0) {
+//
+//			// -----------------------------------
+//			// c1. Get Output String
+//			// -----------------------------------
+//			ss.str(""); ss.clear(std::stringstream::goodbit);
+//			irreg_progress.nab(epoch);
+//			ss << "elapsed = " << irreg_progress.get_elap() << '(' << irreg_progress.get_sec_per() << "sec/epoch)   ";
+//			ss << "remaining = " << irreg_progress.get_rem() << "   ";
+//			ss << "now = " << irreg_progress.get_date() << "   ";
+//			ss << "finish = " << irreg_progress.get_date_fin();
+//			date_out = ss.str();
+//
+//			// -----------------------------------
+//			// c2. Terminal Output
+//			// -----------------------------------
+//			std::cout << date_out << std::endl << progress::separator() << std::endl;
+//			ofs << date_out << std::endl << progress::separator() << std::endl;
+//
+//		}
+//
+//	}
+//
+//	// Post Processing
+//	ofs.close();
+//
+//	// End Processing
+//	return;
+//}
+
 
 // -----------------------------------
 // 9. Valid Function

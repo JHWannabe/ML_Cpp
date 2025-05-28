@@ -106,24 +106,16 @@ void datasets::SegmentImageWithPaths::get(const size_t idx, std::tuple<torch::Te
 
 	if (this->mode == "super") {
 		std::string label_path = file_path;
-		if (file_path.find("notfound") != std::string::npos && file_path.find("bmp") != std::string::npos) {
+		if (file_path.find("notfound") != std::string::npos) {
 			size_t pos;
 			if ((pos = label_path.find("bmp")) != std::string::npos) { label_path.replace(pos, 3, "jpg"); }
 			if ((pos = label_path.find("origin")) != std::string::npos) { label_path.replace(pos, 6, "label"); }
+			label = datasets::GRAY_Loader(label_path);
 		}
-		label = datasets::GRAY_Loader(label_path);
 	}
 	else if (this->mode == "unsuper") {
-		if (this->anomaly) {
-			Augmentation augmentor;
-			std::tie(img, label) = augmentor.generateAnomaly(file_path);
-			//std::string imgPath = "./anomaly_source.jpg";
-			//img = datasets::RGB_Loader(imgPath);
-			this->anomaly = false;
-		}
-		else {
-			this->anomaly = true;
-		}
+		Augmentation augmentor;
+		std::tie(img, label) = augmentor.generateAnomaly(file_path, this->resize);
 	}
 	else if (this->mode == "test" || this->mode == "valid") {
 		if (this->paths.at(idx).find("NG") != std::string::npos) { this->y_true = 0; }
@@ -151,16 +143,6 @@ void datasets::SegmentImageWithPaths::get(const size_t idx, std::tuple<torch::Te
 		label_tensor = label_tensor / max_val;
 	}
 
-	//std::cout << label_tensor.max() << std::endl;
-
-	//auto sub = label_tensor.slice(0, 0, 5)   // H축 0~4
-	//	.slice(1, 0, 5); // W축 0~4
-	//std::cout << "Sub-tensor [H0-4, W0-4]:\n"
-	//	<< sub << "\n";
-
-	//torch::save(image_tensor, "libtorch_img.pth");
-	//torch::save(label_tensor, "libtorch_label.pth");
-
 	data = { image_tensor.detach().clone(), label_tensor.detach().clone(), fname, this->y_true, img, label };
 
 	return;
@@ -176,36 +158,81 @@ size_t datasets::SegmentImageWithPaths::size() {
 // -------------------------------------------------------------------------
 // namespace{datasets} -> class{Augmentation} -> function{generateAnomaly}
 // -------------------------------------------------------------------------
-std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string file_path)
+std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string& file_path, cv::Size resize)
 {
-	// (1) Generate Mask
-	cv::Mat img = datasets::RGB_Loader(file_path);
-	cv::Mat mask_f, mask = generatePerlinNoise(img);
-	cv::cvtColor(mask, mask_f, cv::COLOR_GRAY2BGR);
-
-	// (2) Generate Stable Diffusion Image
-	cv::Mat stableDiffusionImg = stableDiffusion(file_path);
-
+	// (0) p 값을 0~1 사이 난수로 생성
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> dist(0.15f, 1.0f);
-	float factor = dist(gen);
-	cv::Mat stable_f, img_f;
-	stableDiffusionImg.convertTo(stable_f, CV_32FC3);
-	//cv::imwrite("stableDiffusionImg.jpg", stable_f);
-	img.convertTo(img_f, CV_32FC3);
-	cv::Mat anomalySourceImg = factor * mask_f.mul(stable_f) + (1.0f - factor) * (mask_f.mul(img_f));
-	cv::cvtColor(anomalySourceImg, anomalySourceImg, cv::COLOR_BGR2RGB);
+	std::uniform_real_distribution<float> p_dist(0.0f, 1.0f);
+	float p = p_dist(gen);
 
-	// (3) Blend Image and Anomaly Source
-	cv::Mat temp = (cv::Scalar(1.0f, 1.0f, 1.0f) - mask_f).mul(img_f);
-	anomalySourceImg = temp + anomalySourceImg;
-	img = anomalySourceImg;
-	img.convertTo(img, CV_8UC3);
-	//cv::imwrite("anomaly_source.jpg", anomalySourceImg);
-	//cv::imwrite("mask.jpg", mask * 255);
+	cv::Mat img = datasets::RGB_Loader(file_path);
+	cv::resize(img, img, resize);
+	cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC1);
+	
+	if (p > 0.5) {
+		// (1) Generate Mask		
+		cv::Mat mask_f, mask = generatePerlinNoise(img);
+		cv::cvtColor(mask, mask_f, cv::COLOR_GRAY2BGR);
 
-	return std::make_tuple(img, mask);
+		// (2) Generate Stable Diffusion Image
+		cv::Mat stableDiffusionImg = stableDiffusion(file_path);
+		cv::resize(stableDiffusionImg, stableDiffusionImg, resize);
+
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> dist(0.15f, 1.0f);
+		float factor = dist(gen);
+		cv::Mat stable_f, img_f;
+		stableDiffusionImg.convertTo(stable_f, CV_32FC3);
+		img.convertTo(img_f, CV_32FC3);
+		cv::Mat anomalySourceImg = factor * mask_f.mul(stable_f) + (1.0f - factor) * (mask_f.mul(img_f));
+		cv::cvtColor(anomalySourceImg, anomalySourceImg, cv::COLOR_BGR2RGB);
+
+		// (3) Blend Image and Anomaly Source
+		cv::Mat temp = (cv::Scalar(1.0f, 1.0f, 1.0f) - mask_f).mul(img_f);
+		anomalySourceImg = temp + anomalySourceImg;
+		img = anomalySourceImg;
+		img.convertTo(img, CV_8UC3);
+
+		return std::make_tuple(img, mask*255);
+	}
+	else {
+		cv::Mat structureSourceImg = rand_augment(img);
+
+		assert(resize_w % this->grid_size == 0 && resize_h % this->grid_size == 0);
+
+		int gw = structureSourceImg.cols / this->grid_size;
+		int gh = structureSourceImg.rows / this->grid_size;
+		int grid_count = this->grid_size * this->grid_size;
+
+		// 2. Split into grid blocks
+		std::vector<cv::Mat> blocks(grid_count);
+		int idx = 0;
+		for (int y = 0; y < structureSourceImg.rows; y += gh) {
+			for (int x = 0; x < structureSourceImg.cols; x += gw) {
+				cv::Rect roi(x, y, gw, gh);
+				blocks[idx++] = img(roi).clone();  // 안전하게 clone
+			}
+		}
+
+		// 3. Shuffle blocks
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(blocks.begin(), blocks.end(), g);
+
+		// 4. Reconstruct image from shuffled blocks
+		cv::Mat result(structureSourceImg.rows, structureSourceImg.cols, img.type());
+		idx = 0;
+		for (int y = 0; y < structureSourceImg.rows; y += gh) {
+			for (int x = 0; x < structureSourceImg.cols; x += gw) {
+				cv::Mat roi = result(cv::Rect(x, y, gw, gh));
+				blocks[idx++].copyTo(roi);
+			}
+		}
+
+		return std::make_tuple(result, mask);
+	}
 }
 
 // -------------------------------------------------------------------------
@@ -308,4 +335,83 @@ cv::Mat datasets::Augmentation::generatePerlinNoise2D(int width, int height, int
 	// 정규화
 	cv::normalize(noise, noise, 0, 1, cv::NORM_MINMAX);
 	return noise;
+}
+
+cv::Mat datasets::Augmentation::rand_augment(cv::Mat& img) {
+	std::vector<std::function<cv::Mat(const cv::Mat&)>> augmenters;
+
+	// (1) GammaContrast
+	augmenters.push_back([](const cv::Mat& input) {
+		cv::Mat img; input.convertTo(img, CV_32F, 1.0 / 255.0);
+		float gamma = static_cast<float>(rand()) / RAND_MAX * 1.5f + 0.5f;
+		cv::pow(img, gamma, img);
+		img *= 255.0f;
+		img.convertTo(img, CV_8U);
+		return img;
+		});
+
+	// (2) MultiplyAndAddToBrightness
+	augmenters.push_back([](const cv::Mat& input) {
+		cv::Mat img;
+		float mul = 0.8f + static_cast<float>(rand()) / RAND_MAX * 0.4f;
+		int add = rand() % 61 - 30;
+		input.convertTo(img, -1, mul, add);
+		return img;
+		});
+
+	// (3) Invert
+	augmenters.push_back([](const cv::Mat& input) {
+		return cv::Scalar::all(255) - input;
+		});
+
+	// (4) Hue and Saturation shift (in HSV)
+	augmenters.push_back([](const cv::Mat& input) {
+		cv::Mat hsv, out;
+		cv::cvtColor(input, hsv, cv::COLOR_BGR2HSV);
+		std::vector<cv::Mat> channels;
+		cv::split(hsv, channels);
+		int h_shift = rand() % 101 - 50;
+		int s_shift = rand() % 101 - 50;
+		channels[0] += h_shift;
+		channels[1] += s_shift;
+		cv::merge(channels, hsv);
+		cv::cvtColor(hsv, out, cv::COLOR_HSV2BGR);
+		return out;
+		});
+
+	// (5) Rotation
+	augmenters.push_back([](const cv::Mat& input) {
+		double angle = (rand() % 21 - 10); // -10~10도
+		cv::Point2f center(input.cols / 2.0f, input.rows / 2.0f);
+		cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
+		cv::Mat rotated;
+		cv::warpAffine(input, rotated, rot, input.size());
+		return rotated;
+		});
+
+	// (6) Autocontrast & Equalize (approximation)
+	augmenters.push_back([](const cv::Mat& input) {
+		cv::Mat img_yuv;
+		cv::cvtColor(input, img_yuv, cv::COLOR_BGR2YCrCb);
+		std::vector<cv::Mat> channels;
+		cv::split(img_yuv, channels);
+		cv::equalizeHist(channels[0], channels[0]);
+		cv::merge(channels, img_yuv);
+		cv::Mat result;
+		cv::cvtColor(img_yuv, result, cv::COLOR_YCrCb2BGR);
+		return result;
+		});
+
+	// Shuffle + pick 3 random
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(augmenters.begin(), augmenters.end(), g);
+
+	// Apply 3 random augmentations in sequence
+	cv::Mat output = img.clone();
+	for (int i = 0; i < 3; ++i) {
+		output = augmenters[i](output);
+	}
+
+	return output;
 }
