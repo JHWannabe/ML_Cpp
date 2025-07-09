@@ -43,7 +43,7 @@ extern "C" SEGMENTATION_DECLSPEC int mainSegmentation(int argc, const char* argv
 
 torch::Device Set_Device(mINI::INIStructure& ini);
 void Set_Model_Params(mINI::INIStructure& ini, UNet& model, const std::string name);
-void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode);
+void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], const std::string mode);
 bool stringToBool(const std::string& str);
 
 void test(mINI::INIStructure& ini, torch::Device& device, UNet& model, std::vector<transforms_Compose>& transformI, std::vector<transforms_Compose>& transformO);

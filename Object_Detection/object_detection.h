@@ -49,7 +49,7 @@ void Set_Model_Params(mINI::INIStructure& ini, YOLOv3& model, const std::string 
 std::vector<std::string> Set_Class_Names(const std::string path, const size_t class_num);
 std::vector<std::vector<std::tuple<float, float>>> Set_Anchors(const std::string path, const size_t scales, const size_t na);
 std::vector<std::tuple<long int, long int>> Set_Resizes(const std::string path, size_t& resize_step_max);
-void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode);
+void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], const std::string mode);
 bool stringToBool(const std::string& str);
 template <typename Optimizer, typename OptimizerOptions>
 void Update_LR(Optimizer& optimizer, const float lr_init, const float lr_base, const float lr_decay1, const float lr_decay2, const size_t epoch, const float burnin_base, const float burnin_exp = 4.0);

@@ -43,6 +43,8 @@ namespace datasets {
     private:
         int grid_size = 8;
         cv::Size resize;
+        int stable_count = 0;
+        cv::Mat stable_cache;
     public:
         std::tuple<cv::Mat, cv::Mat> generateAnomaly(std::string& file_path, cv::Size resize);
         cv::Mat generatePerlinNoise(cv::Mat& img);
@@ -60,6 +62,7 @@ namespace datasets {
         std::vector<transforms_Compose> imageTransform, labelTransform;
         std::vector<std::string> paths, fnames;
         cv::Size resize;
+		Augmentation augmentor;
     public:
         SegmentImageWithPaths() {}
         SegmentImageWithPaths(const std::string root, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform, const std::string mode, cv::Size resize);

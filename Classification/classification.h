@@ -39,7 +39,7 @@ extern "C" CLASSIFICATION_DECLSPEC int mainClassification(int argc, const char* 
 torch::Device Set_Device(mINI::INIStructure& ini);
 void Set_Model_Params(mINI::INIStructure& ini, MC_ResNet& model, const std::string name);
 std::vector<std::string> Set_Class_Names(const std::string path, const size_t class_num);
-void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode);
+void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], const std::string mode);
 bool stringToBool(const std::string& str);
 
 void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, const std::vector<std::string> class_names);

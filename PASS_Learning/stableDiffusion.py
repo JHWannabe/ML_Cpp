@@ -26,7 +26,7 @@ def anomaly_source(file_path) -> np.ndarray:
     img = img.astype(np.uint8)
     pil_img = Image.fromarray(img).convert("RGB")
     w, h = pil_img.size
-    pil_img = pil_img.resize((w // 2, h //2))  
+    pil_img = pil_img.resize((w // 2, h // 2))  
 
     prompt = "Crack, Scratch"
     negative_prompt = "clean, smooth, flawless"

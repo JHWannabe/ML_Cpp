@@ -384,21 +384,21 @@ void transforms::CenterCropImpl::forward(cv::Mat& data_in, cv::Mat& data_out) {
     int crop_width = this->size.width;
     int crop_height = this->size.height;
 
-    // юл╧лаЖ е╘╠Б
+    // О©╫л╧О©╫О©╫О©╫ е╘О©╫О©╫
     int width = data_in.cols;
     int height = data_in.rows;
 
-    // юз╦╕ е╘╠Б╨╦╢ы ©Ь╨╩ юл╧лаЖ╟║ юшю╨ ╟Ф©Л, ©Ь╨╩ юл╧лаЖ╦╕ ╠в╢К╥н ╩Г©К
+    // О©╫з╦О©╫ е╘О©╫Б╨╦О©╫О©╫ О©╫О©╫О©╫О©╫ О©╫л╧О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫, О©╫О©╫О©╫О©╫ О©╫л╧О©╫О©╫О©╫О©╫О©╫ О©╫в╢О©╫О©╫ О©╫О©╫О©╫
     if (width < crop_width || height < crop_height) {
         data_in.copyTo(data_out);
         return;
     }
 
-    // юл╧лаЖюг аъ╫ию╩ ╠Баью╦╥н crop
+    // О©╫л╧О©╫О©╫О©╫О©╫О©╫ О©╫ъ╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ crop
     int x_start = (width - crop_width) / 2;
     int y_start = (height - crop_height) / 2;
 
-    // гь╢Г ©╣©╙ю╩ crop
+    // О©╫ь╢О©╫ О©╫О©╫О©╫О©╫О©╫О©╫ crop
     cv::Rect roi(x_start, y_start, crop_width, crop_height);
     data_out = data_in(roi);
     return;

@@ -1,63 +1,5 @@
 #include "segmentation.h"
 
-
-// -----------------------------------
-// 0. Argument Function
-// -----------------------------------
-po::options_description parse_arguments(){
-
-    po::options_description args("Options", 200, 30);
-    
-    args.add_options()
-
-        // (1) Define for General Parameter
-        ("help", "produce help message")
-        ("dataset", po::value<std::string>(), "dataset name")
-        ("size", po::value<size_t>()->default_value(256), "image width and height (x>=64)")
-        ("nc", po::value<size_t>()->default_value(3), "input image channel : RGB=3, grayscale=1")
-        ("nz", po::value<size_t>()->default_value(512), "dimensions of latent space")
-        ("class_num", po::value<size_t>()->default_value(256), "total classes")
-        ("gpu_id", po::value<int>()->default_value(0), "cuda device : 'x=-1' is cpu device")
-        ("seed_random", po::value<bool>()->default_value(false), "whether to make the seed of random number in a random")
-        ("seed", po::value<int>()->default_value(0), "seed of random number")
-
-        // (2) Define for Training
-        ("train", po::value<bool>()->default_value(false), "training mode on/off")
-        ("train_in_dir", po::value<std::string>()->default_value("trainI"), "training input image directory : ./datasets/<dataset>/<train_in_dir>/<image files>")
-        ("train_out_dir", po::value<std::string>()->default_value("trainO"), "training output image directory : ./datasets/<dataset>/<train_out_dir>/<image files>")
-        ("epochs", po::value<size_t>()->default_value(200), "training total epoch")
-        ("batch_size", po::value<size_t>()->default_value(32), "training batch size")
-        ("train_load_epoch", po::value<std::string>()->default_value(""), "epoch of model to resume learning")
-        ("save_epoch", po::value<size_t>()->default_value(20), "frequency of epoch to save model and optimizer")
-
-        // (3) Define for Validation
-        ("valid", po::value<bool>()->default_value(false), "validation mode on/off")
-        ("valid_in_dir", po::value<std::string>()->default_value("validI"), "validation input image directory : ./datasets/<dataset>/<valid_in_dir>/<image files>")
-        ("valid_out_dir", po::value<std::string>()->default_value("validO"), "validation output image directory : ./datasets/<dataset>/<valid_out_dir>/<image files>")
-        ("valid_batch_size", po::value<size_t>()->default_value(1), "validation batch size")
-        ("valid_freq", po::value<size_t>()->default_value(1), "validation frequency to training epoch")
-
-        // (4) Define for Test
-        ("test", po::value<bool>()->default_value(false), "test mode on/off")
-        ("test_in_dir", po::value<std::string>()->default_value("testI"), "test input image directory : ./datasets/<dataset>/<test_in_dir>/<image files>")
-        ("test_out_dir", po::value<std::string>()->default_value("testO"), "test output image directory : ./datasets/<dataset>/<test_out_dir>/<image files>")
-        ("test_load_epoch", po::value<std::string>()->default_value("latest"), "training epoch used for testing")
-        ("test_result_dir", po::value<std::string>()->default_value("test_result"), "test result directory : ./<test_result_dir>")
-
-        // (5) Define for Network Parameter
-        ("lr", po::value<float>()->default_value(1e-4), "learning rate")
-        ("beta1", po::value<float>()->default_value(0.5), "beta 1 in Adam of optimizer method")
-        ("beta2", po::value<float>()->default_value(0.999), "beta 2 in Adam of optimizer method")
-        ("nf", po::value<size_t>()->default_value(64), "the number of filters in convolution layer closest to image")
-        ("no_dropout", po::value<bool>()->default_value(false), "Dropout off/on")
-
-    ;
-    
-    // End Processing
-    return args;
-}
-
-
 // -----------------------------------
 // 1. Main Function
 // -----------------------------------
@@ -71,16 +13,6 @@ int mainSegmentation(int argc, const char *argv[], std::string file_path){
     // now we can read the file
     if (!file.read(ini))
         return 1;
-
-    // (1) Extract Arguments
-    po::options_description args = parse_arguments();
-    po::variables_map vm{};
-    po::store(po::parse_command_line(argc, argv, args), vm);
-    po::notify(vm);
-    if (vm.empty() || vm.count("help")){
-        std::cout << args << std::endl;
-        return 1;
-    }
     
     // (2) Select Device
     torch::Device device = Set_Device(ini);
@@ -124,7 +56,7 @@ int mainSegmentation(int argc, const char *argv[], std::string file_path){
     unet->to(device);
     
     // (6) Make Directories
-    std::string dir = "./checkpoints/" + ini["General"]["dataset"];
+    std::string dir = "../Segmentation/checkpoints/" + ini["General"]["dataset"];
     fs::create_directories(dir);
 
     // (7) Save Model Parameters
@@ -132,13 +64,13 @@ int mainSegmentation(int argc, const char *argv[], std::string file_path){
 
     // (8.1) Training Phase
     if (stringToBool(ini["Training"]["train"])) {
-        Set_Options(ini, argc, argv, args, "train");
+        Set_Options(ini, argc, argv, "train");
         train(ini, device, unet, transformI, transformO);
     }
 
     // (8.2) Test Phase
     if (stringToBool(ini["Test"]["test"])) {
-        Set_Options(ini, argc, argv, args, "test");
+        Set_Options(ini, argc, argv, "test");
         test(ini, device, unet, transformI, transformO);
     }
 
@@ -171,7 +103,7 @@ torch::Device Set_Device(mINI::INIStructure& ini)
 void Set_Model_Params(mINI::INIStructure& ini, UNet& model, const std::string name) {
 
     // (1) Make Directory
-    std::string dir = "checkpoints/" + ini["General"]["dataset"] + "/model_params/";
+    std::string dir = "../Segmentation/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["pretrain_mode"] + "/model_params/";
     fs::create_directories(dir);
 
     // (2.1) File Open
@@ -197,16 +129,11 @@ void Set_Model_Params(mINI::INIStructure& ini, UNet& model, const std::string na
 // -----------------------------------
 // 4. Options Setting Function
 // -----------------------------------
-void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode) {
+void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], const std::string mode) {
 
     // (1) Make Directory
-    std::string dir = "checkpoints/" + ini["General"]["dataset"] + "/options/";
+    std::string dir = "../Segmentation/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["pretrain_mode"] + "/options/";
     fs::create_directories(dir);
-
-    // (2) Terminal Output
-    std::cout << "--------------------------------------------" << std::endl;
-    std::cout << args << std::endl;
-    std::cout << "--------------------------------------------" << std::endl;
 
     // (3.1) File Open
     std::string fname = dir + mode + ".txt";
@@ -223,9 +150,6 @@ void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::opti
             ofs << argv[i] << std::endl;
         }
     }
-    ofs << "--------------------------------------------" << std::endl;
-    ofs << args << std::endl;
-    ofs << "--------------------------------------------" << std::endl << std::endl;
 
     // (3.3) File Close
     ofs.close();
@@ -240,11 +164,11 @@ void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::opti
 // -----------------------------------
 bool stringToBool(const std::string& str)
 {
-    // 소문자로 변환하여 비교하기 위해 문자열 복사본 생성
+    // Create a copy of the string to convert to lowercase for comparison
     std::string lowerStr = str;
     std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
 
-    // 다양한 "true"에 해당하는 값을 true로 변환
+    // Convert various values corresponding to "true" to true
     if (lowerStr == "true" || lowerStr == "1") {
         return true;
     }
@@ -252,128 +176,18 @@ bool stringToBool(const std::string& str)
         return false;
     }
 
-    // 예외 처리, 다른 값일 경우 false 또는 예외 발생
+    // Exception handling, return false or throw exception for other values
     throw std::invalid_argument("Invalid boolean string value");
-}
-
-void test(mINI::INIStructure& ini, torch::Device& device, UNet& model, std::vector<transforms_Compose>& transformI, std::vector<transforms_Compose>& transformO) {
-
-    // (0) Initialization and Declaration
-    size_t correct, correct_per_class, total_class_pixel, class_count;
-    float ave_loss;
-    double seconds, ave_time;
-    double pixel_wise_accuracy, ave_pixel_wise_accuracy;
-    double mean_accuracy, ave_mean_accuracy;
-    std::string path, result_dir, fname;
-    std::string input_dir, output_dir;
-    std::ofstream ofs;
-    std::chrono::system_clock::time_point start, end;
-    std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>> data;
-    torch::Tensor image, label, output, output_argmax, answer_mask, response_mask;
-    torch::Tensor loss;
-    datasets::ImageFolderSegmentWithPaths dataset;
-    DataLoader::ImageFolderSegmentWithPaths dataloader;
-
-    // (1) Get Test Dataset
-    input_dir = "../Segmentation/datasets/" + ini["General"]["dataset"] + '/' + ini["Test"]["test_in_dir"];
-    output_dir = "../Segmentation/datasets/" + ini["General"]["dataset"] + '/' + ini["Test"]["test_out_dir"];
-
-    dataset = datasets::ImageFolderSegmentWithPaths(input_dir, output_dir, transformI, transformO);
-    dataloader = DataLoader::ImageFolderSegmentWithPaths(dataset, /*batch_size_=*/1, /*shuffle_=*/false, /*num_workers_=*/0);
-    std::cout << "total test images : " << dataset.size() << std::endl << std::endl;
-
-    // (2) Get Model
-    path = "../Segmentation/checkpoints/" + ini["General"]["dataset"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
-    torch::load(model, path, device);
-
-    // (3) Set Loss Function
-    auto criterion = CEDiceLoss();
-
-    // (4) Initialization of Value
-    ave_loss = 0.0;
-    ave_pixel_wise_accuracy = 0.0;
-    ave_mean_accuracy = 0.0;
-    ave_time = 0.0;
-
-    // (5) Tensor Forward
-    torch::NoGradGuard no_grad;
-    model->eval();
-    result_dir = ini["Test"]["test_result_dir"];
-    fs::create_directories(result_dir);
-    ofs.open(result_dir + "/loss.txt", std::ios::out);
-    while (dataloader(data)) {
-
-        image = std::get<0>(data).to(device);
-        label = std::get<1>(data).to(device);
-
-        if (!device.is_cpu()) torch::cuda::synchronize();
-        start = std::chrono::system_clock::now();
-
-        output = model->forward(image);
-
-        if (!device.is_cpu()) torch::cuda::synchronize();
-        end = std::chrono::system_clock::now();
-        seconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() * 0.001 * 0.001;
-
-        loss = criterion(output, label);
-
-        output_argmax = output.exp().argmax(/*dim=*/1, /*keepdim=*/true);
-        correct = (label == output_argmax).sum().item<int64_t>();
-        pixel_wise_accuracy = (double)correct / (double)(label.size(0) * label.size(1) * label.size(2));
-
-        class_count = 0;
-        mean_accuracy = 0.0;
-        for (size_t i = 0; i < std::get<4>(data).size(); i++) {
-            answer_mask = torch::full({ label.size(0), label.size(1), label.size(2) }, /*value=*/(int64_t)i, torch::TensorOptions().dtype(torch::kLong)).to(device);
-            total_class_pixel = (label == answer_mask).sum().item<int64_t>();
-            if (total_class_pixel != 0) {
-                response_mask = torch::full({ label.size(0), label.size(1), label.size(2) }, /*value=*/2, torch::TensorOptions().dtype(torch::kLong)).to(device);
-                correct_per_class = (((label == output_argmax).to(torch::kLong) + (label == answer_mask).to(torch::kLong)) == response_mask).sum().item<int64_t>();
-                mean_accuracy += (double)correct_per_class / (double)total_class_pixel;
-                class_count++;
-            }
-        }
-        mean_accuracy = mean_accuracy / (double)class_count;
-
-        ave_loss += loss.item<float>();
-        ave_pixel_wise_accuracy += pixel_wise_accuracy;
-        ave_mean_accuracy += mean_accuracy;
-        ave_time += seconds;
-
-        std::cout << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " pixel-wise-accuracy:" << pixel_wise_accuracy << " mean-accuracy:" << mean_accuracy << std::endl;
-        ofs << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " pixel-wise-accuracy:" << pixel_wise_accuracy << " mean-accuracy:" << mean_accuracy << std::endl;
-
-        fname = result_dir + '/' + std::get<3>(data).at(0);
-        visualizer::save_label(output_argmax.detach(), fname, std::get<4>(data), /*cols=*/1, /*padding=*/0);
-
-    }
-
-    // (6) Calculate Average
-    ave_loss = ave_loss / (float)dataset.size();
-    ave_pixel_wise_accuracy = ave_pixel_wise_accuracy / (double)dataset.size();
-    ave_mean_accuracy = ave_mean_accuracy / (double)dataset.size();
-    ave_time = ave_time / (double)dataset.size();
-
-    // (7) Average Output
-    std::cout << "<All> cross-entropy:" << ave_loss << " pixel-wise-accuracy:" << ave_pixel_wise_accuracy << " mean-accuracy:" << ave_mean_accuracy << " (time:" << ave_time << ')' << std::endl;
-    ofs << "<All> cross-entropy:" << ave_loss << " pixel-wise-accuracy:" << ave_pixel_wise_accuracy << " mean-accuracy:" << ave_mean_accuracy << " (time:" << ave_time << ')' << std::endl;
-
-    // Post Processing
-    ofs.close();
-
-    // End Processing
-    return;
-
 }
 
 void train(mINI::INIStructure& ini, torch::Device& device, UNet& model, std::vector<transforms_Compose>& transformI, std::vector<transforms_Compose>& transformO) {
 
-    constexpr bool train_shuffle = true;  // whether to shuffle the training dataset
-    constexpr size_t train_workers = 4;  // the number of workers to retrieve data from the training dataset
-    constexpr bool valid_shuffle = true;  // whether to shuffle the validation dataset
-    constexpr size_t valid_workers = 4;  // the number of workers to retrieve data from the validation dataset
-    constexpr size_t save_sample_iter = 50;  // the frequency of iteration to save sample images
-    constexpr std::string_view extension = "png";  // the extension of file name to save sample images
+    bool train_shuffle = ini["Training"]["train_shuffle"] == "true";  // whether to shuffle the training dataset
+    size_t train_workers = 4;  // the number of workers to retrieve data from the training dataset
+    bool valid_shuffle = true;  // whether to shuffle the validation dataset
+    size_t valid_workers = 4;  // the number of workers to retrieve data from the validation dataset
+    size_t save_sample_iter = 50;  // the frequency of iteration to save sample images
+    std::string_view extension = "jpg";  // the extension of file name to save sample images
 
     // -----------------------------------
     // a0. Initialization and Declaration
@@ -667,6 +481,116 @@ void valid(mINI::INIStructure& ini, DataLoader::ImageFolderSegmentWithPaths& val
 
     // (3.2) Record Loss (Graph)
     writer.plot(/*base=*/epoch, /*value=*/{ ave_loss });
+
+    // End Processing
+    return;
+
+}
+
+void test(mINI::INIStructure& ini, torch::Device& device, UNet& model, std::vector<transforms_Compose>& transformI, std::vector<transforms_Compose>& transformO) {
+
+    // (0) Initialization and Declaration
+    size_t correct, correct_per_class, total_class_pixel, class_count;
+    float ave_loss;
+    double seconds, ave_time;
+    double pixel_wise_accuracy, ave_pixel_wise_accuracy;
+    double mean_accuracy, ave_mean_accuracy;
+    std::string path, result_dir, fname;
+    std::string input_dir, output_dir;
+    std::ofstream ofs;
+    std::chrono::system_clock::time_point start, end;
+    std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>> data;
+    torch::Tensor image, label, output, output_argmax, answer_mask, response_mask;
+    torch::Tensor loss;
+    datasets::ImageFolderSegmentWithPaths dataset;
+    DataLoader::ImageFolderSegmentWithPaths dataloader;
+
+    // (1) Get Test Dataset
+    input_dir = "../Segmentation/datasets/" + ini["General"]["dataset"] + '/' + ini["Test"]["test_in_dir"];
+    output_dir = "../Segmentation/datasets/" + ini["General"]["dataset"] + '/' + ini["Test"]["test_out_dir"];
+
+    dataset = datasets::ImageFolderSegmentWithPaths(input_dir, output_dir, transformI, transformO);
+    dataloader = DataLoader::ImageFolderSegmentWithPaths(dataset, /*batch_size_=*/1, /*shuffle_=*/false, /*num_workers_=*/0);
+    std::cout << "total test images : " << dataset.size() << std::endl << std::endl;
+
+    // (2) Get Model
+    path = "../Segmentation/checkpoints/" + ini["General"]["dataset"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
+    torch::load(model, path, device);
+
+    // (3) Set Loss Function
+    auto criterion = CEDiceLoss();
+
+    // (4) Initialization of Value
+    ave_loss = 0.0;
+    ave_pixel_wise_accuracy = 0.0;
+    ave_mean_accuracy = 0.0;
+    ave_time = 0.0;
+
+    // (5) Tensor Forward
+    torch::NoGradGuard no_grad;
+    model->eval();
+    result_dir = ini["Test"]["test_result_dir"];
+    fs::create_directories(result_dir);
+    ofs.open(result_dir + "/loss.txt", std::ios::out);
+    while (dataloader(data)) {
+
+        image = std::get<0>(data).to(device);
+        label = std::get<1>(data).to(device);
+
+        if (!device.is_cpu()) torch::cuda::synchronize();
+        start = std::chrono::system_clock::now();
+
+        output = model->forward(image);
+
+        if (!device.is_cpu()) torch::cuda::synchronize();
+        end = std::chrono::system_clock::now();
+        seconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() * 0.001 * 0.001;
+
+        loss = criterion(output, label);
+
+        output_argmax = output.exp().argmax(/*dim=*/1, /*keepdim=*/true);
+        correct = (label == output_argmax).sum().item<int64_t>();
+        pixel_wise_accuracy = (double)correct / (double)(label.size(0) * label.size(1) * label.size(2));
+
+        class_count = 0;
+        mean_accuracy = 0.0;
+        for (size_t i = 0; i < std::get<4>(data).size(); i++) {
+            answer_mask = torch::full({ label.size(0), label.size(1), label.size(2) }, /*value=*/(int64_t)i, torch::TensorOptions().dtype(torch::kLong)).to(device);
+            total_class_pixel = (label == answer_mask).sum().item<int64_t>();
+            if (total_class_pixel != 0) {
+                response_mask = torch::full({ label.size(0), label.size(1), label.size(2) }, /*value=*/2, torch::TensorOptions().dtype(torch::kLong)).to(device);
+                correct_per_class = (((label == output_argmax).to(torch::kLong) + (label == answer_mask).to(torch::kLong)) == response_mask).sum().item<int64_t>();
+                mean_accuracy += (double)correct_per_class / (double)total_class_pixel;
+                class_count++;
+            }
+        }
+        mean_accuracy = mean_accuracy / (double)class_count;
+
+        ave_loss += loss.item<float>();
+        ave_pixel_wise_accuracy += pixel_wise_accuracy;
+        ave_mean_accuracy += mean_accuracy;
+        ave_time += seconds;
+
+        std::cout << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " pixel-wise-accuracy:" << pixel_wise_accuracy << " mean-accuracy:" << mean_accuracy << std::endl;
+        ofs << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " pixel-wise-accuracy:" << pixel_wise_accuracy << " mean-accuracy:" << mean_accuracy << std::endl;
+
+        fname = result_dir + '/' + std::get<3>(data).at(0);
+        visualizer::save_label(output_argmax.detach(), fname, std::get<4>(data), /*cols=*/1, /*padding=*/0);
+
+    }
+
+    // (6) Calculate Average
+    ave_loss = ave_loss / (float)dataset.size();
+    ave_pixel_wise_accuracy = ave_pixel_wise_accuracy / (double)dataset.size();
+    ave_mean_accuracy = ave_mean_accuracy / (double)dataset.size();
+    ave_time = ave_time / (double)dataset.size();
+
+    // (7) Average Output
+    std::cout << "<All> cross-entropy:" << ave_loss << " pixel-wise-accuracy:" << ave_pixel_wise_accuracy << " mean-accuracy:" << ave_mean_accuracy << " (time:" << ave_time << ')' << std::endl;
+    ofs << "<All> cross-entropy:" << ave_loss << " pixel-wise-accuracy:" << ave_pixel_wise_accuracy << " mean-accuracy:" << ave_mean_accuracy << " (time:" << ave_time << ')' << std::endl;
+
+    // Post Processing
+    ofs.close();
 
     // End Processing
     return;

@@ -1,75 +1,14 @@
 #include "classification.h"
 
-// -----------------------------------
-// 0. Argument Function
-// -----------------------------------
-po::options_description parse_arguments() {
-
-	po::options_description args("Options", 200, 30);
-	args.add_options()
-
-		// (1) Define for General Parameter
-		("help", "produce help message")
-		("dataset", po::value<std::string>(), "dataset name")
-		("class_list", po::value<std::string>()->default_value("list/ImageNet.txt"), "file name in which class names are listed")
-		("class_num", po::value<size_t>()->default_value(1000), "total classes")
-		("size", po::value<size_t>()->default_value(224), "image width and height")
-		("nc", po::value<size_t>()->default_value(3), "input image channel : RGB=3, grayscale=1")
-		("gpu_id", po::value<int>()->default_value(0), "cuda device : 'x=-1' is cpu device")
-		("seed_random", po::value<bool>()->default_value(false), "whether to make the seed of random number in a random")
-		("seed", po::value<int>()->default_value(0), "seed of random number")
-
-		// (2) Define for Training
-		("train", po::value<bool>()->default_value(false), "training mode on/off")
-		("train_dir", po::value<std::string>()->default_value("train"), "training image directory : ./datasets/<dataset>/<train_dir>/<class name>/<image files>")
-		("epochs", po::value<size_t>()->default_value(200), "training total epoch")
-		("batch_size", po::value<size_t>()->default_value(32), "training batch size")
-		("train_load_epoch", po::value<std::string>()->default_value(""), "epoch of model to resume learning")
-		("save_epoch", po::value<size_t>()->default_value(20), "frequency of epoch to save model and optimizer")
-
-		// (3) Define for Validation
-		("valid", po::value<bool>()->default_value(false), "validation mode on/off")
-		("valid_dir", po::value<std::string>()->default_value("valid"), "validation image directory : ./datasets/<dataset>/<valid_dir>/<class name>/<image files>")
-		("valid_batch_size", po::value<size_t>()->default_value(1), "validation batch size")
-		("valid_freq", po::value<size_t>()->default_value(1), "validation frequency to training epoch")
-
-		// (4) Define for Test
-		("test", po::value<bool>()->default_value(false), "test mode on/off")
-		("test_dir", po::value<std::string>()->default_value("test"), "test image directory : ./datasets/<dataset>/<test_dir>/<class name>/<image files>")
-		("test_load_epoch", po::value<std::string>()->default_value("latest"), "training epoch used for testing")
-		("test_result_dir", po::value<std::string>()->default_value("test_result"), "test result directory : ./<test_result_dir>")
-
-		// (5) Define for Network Parameter
-		("lr", po::value<float>()->default_value(1e-4), "learning rate")
-		("beta1", po::value<float>()->default_value(0.5), "beta 1 in Adam of optimizer method")
-		("beta2", po::value<float>()->default_value(0.999), "beta 2 in Adam of optimizer method")
-		("nf", po::value<size_t>()->default_value(64), "the number of filters in convolution layer closest to image")
-		("n_layers", po::value<size_t>(), "the number of layer in model")
-		;
-
-	// End Processing
-	return args;
-}
-
 int mainClassification(int argc, const char* argv[], std::string file_path) {
 
 	// (0) Check File Path
-	if (!std::filesystem::exists(file_path)){ return 1;	}
+	if (!std::filesystem::exists(file_path)) { return 1; }
 	mINI::INIFile file(file_path);
 	mINI::INIStructure ini;
 
 	// now we can read the file
 	if (!file.read(ini)) return 1;
-
-	// (1) Extract Arguments
-	po::options_description args = parse_arguments();
-	po::variables_map vm{};
-	po::store(po::parse_command_line(argc, argv, args), vm);
-	po::notify(vm);
-	if (vm.empty() || vm.count("help")) {
-		std::cout << args << std::endl;
-		return 1;
-	}
 
 	// (2) Select Device
 	torch::Device device = Set_Device(ini);
@@ -96,7 +35,7 @@ int mainClassification(int argc, const char* argv[], std::string file_path) {
 	model->to(device);
 
 	// (6) Make Directories
-	std::string dir = "checkpoints/" + ini["General"]["dataset"];
+	std::string dir = "../Classification/checkpoints/" + ini["General"]["dataset"];
 	fs::create_directories(dir);
 
 	// (7) Save Model Parameters
@@ -107,19 +46,18 @@ int mainClassification(int argc, const char* argv[], std::string file_path) {
 
 	// (9.1) Training Phase
 	if (stringToBool(ini["Training"]["train"])) {
-		Set_Options(ini, argc, argv, args, "train");
+		Set_Options(ini, argc, argv, "train");
 		train(ini, device, model, class_names);
 	}
 
 	// (9.2) Test Phase
 	if (stringToBool(ini["Test"]["test"])) {
-	    Set_Options(ini, argc, argv, args, "test");
-	    test(ini, device, model, class_names);
+		Set_Options(ini, argc, argv, "test");
+		test(ini, device, model, class_names);
 	}
 
 	// End Processing
 	return 0;
-
 }
 
 // -----------------------------------
@@ -144,8 +82,9 @@ torch::Device Set_Device(mINI::INIStructure& ini)
 // 2. Model Parameters Setting Function
 // -----------------------------------
 void Set_Model_Params(mINI::INIStructure& ini, MC_ResNet& model, const std::string name) {
+
 	// (1) Make Directory
-	std::string dir = "checkpoints/" + ini["General"]["dataset"] + "/model_params/";
+	std::string dir = "../Classification/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["pretrain_mode"] + "/model_params/";
 	fs::create_directories(dir);
 
 	// (2.1) File Open
@@ -195,15 +134,11 @@ std::vector<std::string> Set_Class_Names(const std::string path, const size_t cl
 // -----------------------------------
 // 4. Options Setting Function
 // -----------------------------------
-void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode) {
-	// (1) Make Directory
-	std::string dir = "checkpoints/" + ini["General"]["dataset"] + "/options/";
-	fs::create_directories(dir);
+void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], const std::string mode) {
 
-	// (2) Terminal Output
-	std::cout << "--------------------------------------------" << std::endl;
-	std::cout << args << std::endl;
-	std::cout << "--------------------------------------------" << std::endl;
+	// (1) Make Directory
+	std::string dir = "../Classification/checkpoints/" + ini["General"]["dataset"] + "/" + ini["Training"]["pretrain_mode"] + "/options/";
+	fs::create_directories(dir);
 
 	// (3.1) File Open
 	std::string fname = dir + mode + ".txt";
@@ -220,9 +155,6 @@ void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::opti
 			ofs << argv[i] << std::endl;
 		}
 	}
-	ofs << "--------------------------------------------" << std::endl;
-	ofs << args << std::endl;
-	ofs << "--------------------------------------------" << std::endl << std::endl;
 
 	// (3.3) File Close
 	ofs.close();
@@ -237,152 +169,22 @@ void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::opti
 // -----------------------------------
 bool stringToBool(const std::string& str)
 {
-	// 소문자로 변환하여 비교하기 위해 문자열 복사본 생성
+	// Create a copy of the string to convert to lowercase for comparison
 	std::string lowerStr = str;
 	std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
 
-	// 다양한 "true"에 해당하는 값을 true로 변환
+	// Convert various representations of "true" to true
 	if (lowerStr == "true" || lowerStr == "1") {
 		return true;
 	}
 	else if (lowerStr == "false" || lowerStr == "0") {
 		return false;
 	}
-
-	// 예외 처리, 다른 값일 경우 false 또는 예외 발생
-	throw std::invalid_argument("Invalid boolean string value");
-}
-
-void test(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, const std::vector<std::string> class_names)
-{
-	// (0) Initialization and Declaration
-	size_t class_num;
-	size_t match, counter;
-	long int response, answer;
-	char judge;
-	float accuracy;
-	float ave_loss;
-	double seconds, ave_time;
-	std::string path, result_dir;
-	std::string dataroot;
-	std::ofstream ofs, ofs2;
-	std::chrono::system_clock::time_point start, end;
-	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>> data;
-	torch::Tensor image, label, output;
-	torch::Tensor loss;
-	datasets::ImageFolderClassesWithPaths dataset;
-	DataLoader::ImageFolderClassesWithPaths dataloader;
-
-	// (0) Transform
-	std::vector<transforms_Compose> transform{
-		transforms_Resize(cv::Size(std::stol(ini["General"]["size_w"]), std::stol(ini["General"]["size_h"])), cv::INTER_LINEAR), // {IH,IW,C} ===method{OW,OH}===> {OH,OW,C}
-		//transforms_CenterCrop(cv::Size(224, 224)),
-		transforms_ToTensor(),                                                                                  // Mat Image [0,255] or [0,65535] ===> Tensor Image [0,1]
-		transforms_Normalize(std::vector<float>{0.485, 0.456, 0.406}, std::vector<float>{0.229, 0.224, 0.225})  // Pixel Value Normalization for ImageNet
-	};
-	if (std::stol(ini["General"]["input_channel"]) == 1) {
-		transform.insert(transform.begin(), transforms_Grayscale(1));
-	}
-
-	// (1) Get Test Dataset
-	dataroot = "../Classification/datasets/" + ini["General"]["dataset"] + "/" + ini["Test"]["test_dir"];
-	dataset = datasets::ImageFolderClassesWithPaths(dataroot, transform, class_names);
-	dataloader = DataLoader::ImageFolderClassesWithPaths(dataset, /*batch_size_=*/1, /*shuffle_=*/false, /*num_workers_=*/0);
-	std::cout << "total test images : " << dataset.size() << std::endl << std::endl;
-
-	// (2) Get Model
-	path = "../Classification/checkpoints/" + ini["General"]["dataset"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
-	torch::load(model, path, device);
-
-	// (3) Set Loss Function
-	auto criterion = Loss();
-
-	// (4) Initialization of Value
-	ave_loss = 0.0;
-	ave_time = 0.0;
-	match = 0;
-	counter = 0;
-	class_num = class_names.size();
-
-	// (5) File Pre-processing
-	result_dir = ini["Test"]["test_result_dir"];  fs::create_directories(result_dir);
-	ofs.open(result_dir + "/loss.txt", std::ios::out);
-	ofs2.open(result_dir + "/likelihood.csv", std::ios::out);
-	ofs2 << "file name," << std::flush;
-	ofs2 << "judge," << std::flush;
-	for (size_t i = 0; i < class_num; i++) {
-		ofs2 << i << "(" << class_names.at(i) << ")," << std::flush;
-	}
-	ofs2 << std::endl;
-
-	// (6) Tensor Forward
-	torch::NoGradGuard no_grad;
-	model->eval();
-	while (dataloader(data)) {
-
-		image = std::get<0>(data).to(device);
-		label = std::get<1>(data).to(device);
-
-		if (!device.is_cpu()) torch::cuda::synchronize();
-		start = std::chrono::system_clock::now();
-
-		output = model->forward(image);
-
-		if (!device.is_cpu()) torch::cuda::synchronize();
-		end = std::chrono::system_clock::now();
-		seconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() * 0.001 * 0.001;
-
-		loss = criterion(output, label);
-
-		ave_loss += loss.item<float>();
-		ave_time += seconds;
-
-		output = output.exp();
-		//response = output.argmax(/*dim=*/1).item<long int>();
-		//answer = label[0].item<long int>();
-		response = output.argmax(/*dim=*/1).item().toLong();
-		answer = label[0].item().toLong();
-		counter += 1;
-		judge = 'F';
-		if (response == answer) {
-			match += 1;
-			judge = 'T';
-		}
-
-		std::cout << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " judge:" << judge << " response:" << response << '(' << class_names.at(response) << ") answer:" << answer << '(' << class_names.at(answer) << ')' << std::endl;
-		ofs << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " judge:" << judge << " response:" << response << '(' << class_names.at(response) << ") answer:" << answer << '(' << class_names.at(answer) << ')' << std::endl;
-		ofs2 << std::get<2>(data).at(0) << ',' << std::flush;
-		ofs2 << judge << ',' << std::flush;
-		output = output[0];  // {1, CN} ===> {CN}
-		for (size_t i = 0; i < class_num; i++) {
-			ofs2 << output[i].item<float>() << ',' << std::flush;
-		}
-		ofs2 << std::endl;
-
-	}
-
-	// (7.1) Calculate Average
-	ave_loss = ave_loss / (float)dataset.size();
-	ave_time = ave_time / (double)dataset.size();
-
-	// (7.2) Calculate Accuracy
-	accuracy = (float)match / float(counter);
-
-	// (8) Average Output
-	std::cout << "<All> cross-entropy:" << ave_loss << " accuracy:" << accuracy << " (time:" << ave_time << ')' << std::endl;
-	ofs << "<All> cross-entropy:" << ave_loss << " accuracy:" << accuracy << " (time:" << ave_time << ')' << std::endl;
-
-	// Post Processing
-	ofs.close();
-	ofs2.close();
-
-	// End Processing
-	return;
 }
 
 void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, const std::vector<std::string> class_names)
 {
-	constexpr bool train_shuffle = true;  // whether to shuffle the training dataset
+	const bool train_shuffle = stringToBool(ini["Training"]["train_shuffle"]);  // whether to shuffle the training dataset
 	constexpr size_t train_workers = 4;  // the number of workers to retrieve data from the training dataset
 	constexpr bool valid_shuffle = true;  // whether to shuffle the validation dataset
 	constexpr size_t valid_workers = 4;  // the number of workers to retrieve data from the validation dataset
@@ -426,7 +228,7 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 	}
 
 	// (1) Get Training Dataset
-	dataroot = "../Classification/datasets/" + ini["General"]["dataset"] + "/" + ini["Training"]["train_dir"];
+	dataroot = ini["Training"]["train_dir"];
 	dataset = datasets::ImageFolderClassesWithPaths(dataroot, transform, class_names);
 	dataloader = DataLoader::ImageFolderClassesWithPaths(dataset, std::stol(ini["Training"]["batch_size"]), /*shuffle_=*/train_shuffle, /*num_workers_=*/train_workers);
 	std::cout << "total training images : " << dataset.size() << std::endl;
@@ -442,10 +244,10 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 	// (3) Set Optimizer Method
 	auto optimizer = torch::optim::Adam(model->parameters(), torch::optim::AdamOptions(std::stof(ini["Network"]["lr"])).weight_decay(1e-5).betas({ std::stof(ini["Network"]["beta1"]), std::stof(ini["Network"]["beta2"]) }));
 
-	//// CosineAnnealingLR 설정
-	//double T_max = 100; // 한 주기 내에서 학습률이 변화하는 기간(에폭 수)
-	//double eta_min = 1e-6; // 최소 학습률
-	//double eta_max = 1e-3; // 최대 학습률
+	//// CosineAnnealingLR setting
+	//double T_max = 100; // The period (number of epochs) in which the learning rate changes in one cycle
+	//double eta_min = 1e-6; // Minimum learning rate
+	//double eta_max = 1e-3; // Maximum learning rate
 	//CosineAnnealingLR scheduler(optimizer, T_max, eta_min, eta_max);
 
 
@@ -479,29 +281,18 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 				std::cerr << "Error loading the traced model. \n" + e.msg();
 			}
 
-			//// traced_model의 파라미터 출력
-			//for (const auto& pair : traced_model.named_parameters()) {
-			//    std::cout << pair.name << std::endl;
-			//}
-
-			//// model의 파라미터 출력
-			//for (const auto& pair : model->named_parameters()) {
-			//    std::cout << pair.key() << std::endl;
-			//}
-
-
 			for (const auto& pair : traced_model.named_parameters()) {
 				auto param_name = pair.name;
 				auto param_tensor = pair.value;
 
-				// model의 named_parameters()을 통해 param_name에 해당하는 파라미터를 찾음
+				// Find the parameter corresponding to param_name in model's named_parameters()
 				auto params = model->named_parameters();
-				// std::find_if를 사용하여 param_name이 일치하는 항목 찾기
+				// Use std::find_if to find the item whose param_name matches
 				auto it = std::find_if(params.begin(), params.end(),
 					[&](const auto& p) { return p.key() == param_name; });
 
 				if (it != params.end()) {
-					// 파라미터 크기 비교
+					// Compare parameter sizes
 					if (it->value().sizes() != param_tensor.sizes()) {
 						std::cerr << "Shape mismatch for " << param_name
 							<< ": model size: " << it->value().sizes()
@@ -509,10 +300,10 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 						continue;
 					}
 
-					// 파라미터 복사
+					// Copy parameter
 					try {
-						torch::NoGradGuard no_grad;  // 그래디언트 추적 비활성화
-						it->value().copy_(param_tensor.detach());  // in-place 연산 방지
+						torch::NoGradGuard no_grad;  // Disable gradient tracking
+						it->value().copy_(param_tensor.detach());  // Prevent in-place operation
 					}
 					catch (const c10::Error& e) {
 						std::cerr << "Error parameter copy for " << param_name << ": " + e.msg() << std::endl;
@@ -571,9 +362,9 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 	total_iter = dataloader.get_count_max();
 	total_epoch = std::stol(ini["Training"]["epochs"]);
 
-	float initial_lr = std::stof(ini["Network"]["lr"]);  // 초기 학습률
-	int step_size = 10;       // 학습률 감소 주기
-	float gamma = 0.1;        // 학습률 감소 비율
+	float initial_lr = std::stof(ini["Network"]["lr"]);  // Initial learning rate
+	int step_size = 10;       // Learning rate decay period
+	float gamma = 0.1;        // Learning rate decay ratio
 
 	// (2) Training per Epoch
 	irreg_progress.restart(start_epoch - 1, total_epoch);
@@ -585,7 +376,7 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 		std::cout << std::endl;
 
 		// -----------------------------------
-		// 학습률 스케줄러: 에폭마다 학습률 업데이트
+		// Learning rate scheduler: update learning rate every epoch
 		// -----------------------------------
 		if (epoch % step_size == 0 && epoch > 0) {
 			float new_lr = initial_lr * std::pow(gamma, epoch / step_size);
@@ -593,6 +384,9 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 				group.options().set_lr(new_lr);
 			}
 		}
+
+		std::cout << "Epoch [" << epoch << "] Learning Rate: "
+			<< optimizer.param_groups()[0].options().get_lr() << std::endl;
 
 		// -----------------------------------
 		// b1. Mini Batch Learning
@@ -627,10 +421,9 @@ void train(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, con
 			ofs << "classify:" << loss.item<float>() << "(ave:" << show_progress->get_ave(0) << ')' << std::endl;
 		}
 
-		// CosineAnnealingLR 스케줄러 업데이트
+		// CosineAnnealingLR scheduler update
 		// scheduler.step(epoch);
-		std::cout << "Epoch [" << epoch << "] Learning Rate: "
-			<< optimizer.param_groups()[0].options().get_lr() << std::endl;
+
 
 		// -----------------------------------
 		// b2. Record Loss (epoch)
@@ -793,4 +586,131 @@ void valid(mINI::INIStructure& ini, DataLoader::ImageFolderClassesWithPaths& val
 	// End Processing
 	return;
 
+}
+
+void test(mINI::INIStructure& ini, torch::Device& device, MC_ResNet& model, const std::vector<std::string> class_names)
+{
+	// (0) Initialization and Declaration
+	size_t class_num;
+	size_t match, counter;
+	long int response, answer;
+	char judge;
+	float accuracy;
+	float ave_loss;
+	double seconds, ave_time;
+	std::string path, result_dir;
+	std::string dataroot;
+	std::ofstream ofs, ofs2;
+	std::chrono::system_clock::time_point start, end;
+	std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>> data;
+	torch::Tensor image, label, output;
+	torch::Tensor loss;
+	datasets::ImageFolderClassesWithPaths dataset;
+	DataLoader::ImageFolderClassesWithPaths dataloader;
+
+	// (0) Transform
+	std::vector<transforms_Compose> transform{
+		transforms_Resize(cv::Size(std::stol(ini["General"]["size_w"]), std::stol(ini["General"]["size_h"])), cv::INTER_LINEAR), // {IH,IW,C} ===method{OW,OH}===> {OH,OW,C}
+		//transforms_CenterCrop(cv::Size(224, 224)),
+		transforms_ToTensor(),                                                                                  // Mat Image [0,255] or [0,65535] ===> Tensor Image [0,1]
+		transforms_Normalize(std::vector<float>{0.485, 0.456, 0.406}, std::vector<float>{0.229, 0.224, 0.225})  // Pixel Value Normalization for ImageNet
+	};
+	if (std::stol(ini["General"]["input_channel"]) == 1) {
+		transform.insert(transform.begin(), transforms_Grayscale(1));
+	}
+
+	// (1) Get Test Dataset
+	dataroot = "../Classification/datasets/" + ini["General"]["dataset"] + "/" + ini["Test"]["test_dir"];
+	dataset = datasets::ImageFolderClassesWithPaths(dataroot, transform, class_names);
+	dataloader = DataLoader::ImageFolderClassesWithPaths(dataset, /*batch_size_=*/1, /*shuffle_=*/false, /*num_workers_=*/0);
+	std::cout << "total test images : " << dataset.size() << std::endl << std::endl;
+
+	// (2) Get Model
+	path = "../Classification/checkpoints/" + ini["General"]["dataset"] + "/models/epoch_" + ini["Test"]["test_load_epoch"] + ".pth";
+	torch::load(model, path, device);
+
+	// (3) Set Loss Function
+	auto criterion = Loss();
+
+	// (4) Initialization of Value
+	ave_loss = 0.0;
+	ave_time = 0.0;
+	match = 0;
+	counter = 0;
+	class_num = class_names.size();
+
+	// (5) File Pre-processing
+	result_dir = ini["Test"]["test_result_dir"];  fs::create_directories(result_dir);
+	ofs.open(result_dir + "/loss.txt", std::ios::out);
+	ofs2.open(result_dir + "/likelihood.csv", std::ios::out);
+	ofs2 << "file name," << std::flush;
+	ofs2 << "judge," << std::flush;
+	for (size_t i = 0; i < class_num; i++) {
+		ofs2 << i << "(" << class_names.at(i) << ")," << std::flush;
+	}
+	ofs2 << std::endl;
+
+	// (6) Tensor Forward
+	torch::NoGradGuard no_grad;
+	model->eval();
+	while (dataloader(data)) {
+
+		image = std::get<0>(data).to(device);
+		label = std::get<1>(data).to(device);
+
+		if (!device.is_cpu()) torch::cuda::synchronize();
+		start = std::chrono::system_clock::now();
+
+		output = model->forward(image);
+
+		if (!device.is_cpu()) torch::cuda::synchronize();
+		end = std::chrono::system_clock::now();
+		seconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() * 0.001 * 0.001;
+
+		loss = criterion(output, label);
+
+		ave_loss += loss.item<float>();
+		ave_time += seconds;
+
+		output = output.exp();
+		//response = output.argmax(/*dim=*/1).item<long int>();
+		//answer = label[0].item<long int>();
+		response = output.argmax(/*dim=*/1).item().toLong();
+		answer = label[0].item().toLong();
+		counter += 1;
+		judge = 'F';
+		if (response == answer) {
+			match += 1;
+			judge = 'T';
+		}
+
+		std::cout << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " judge:" << judge << " response:" << response << '(' << class_names.at(response) << ") answer:" << answer << '(' << class_names.at(answer) << ')' << std::endl;
+		ofs << '<' << std::get<2>(data).at(0) << "> cross-entropy:" << loss.item<float>() << " judge:" << judge << " response:" << response << '(' << class_names.at(response) << ") answer:" << answer << '(' << class_names.at(answer) << ')' << std::endl;
+		ofs2 << std::get<2>(data).at(0) << ',' << std::flush;
+		ofs2 << judge << ',' << std::flush;
+		output = output[0];  // {1, CN} ===> {CN}
+		for (size_t i = 0; i < class_num; i++) {
+			ofs2 << output[i].item<float>() << ',' << std::flush;
+		}
+		ofs2 << std::endl;
+
+	}
+
+	// (7.1) Calculate Average
+	ave_loss = ave_loss / (float)dataset.size();
+	ave_time = ave_time / (double)dataset.size();
+
+	// (7.2) Calculate Accuracy
+	accuracy = (float)match / float(counter);
+
+	// (8) Average Output
+	std::cout << "<All> cross-entropy:" << ave_loss << " accuracy:" << accuracy << " (time:" << ave_time << ')' << std::endl;
+	ofs << "<All> cross-entropy:" << ave_loss << " accuracy:" << accuracy << " (time:" << ave_time << ')' << std::endl;
+
+	// Post Processing
+	ofs.close();
+	ofs2.close();
+
+	// End Processing
+	return;
 }

@@ -45,23 +45,23 @@ extern "C" PASSLEARNING_DECLSPEC int mainPASSLearning(int argc, const char* argv
 
 torch::Device Set_Device(mINI::INIStructure& ini);
 void Set_Model_Params(mINI::INIStructure& ini, std::shared_ptr<Supervised>& model, const std::string name);
-void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], po::options_description& args, const std::string mode);
+void Set_Options(mINI::INIStructure& ini, int argc, const char* argv[], const std::string mode);
 bool stringToBool(const std::string& str);
 
 void test(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform);
 void train(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform);
-void valid(mINI::INIStructure& ini, DataLoader::SegmentImageWithPaths& valid_dataloader, torch::Device& device, Loss& criterion, std::shared_ptr<Supervised>& model, const size_t epoch, visualizer::graph& writer);
+void valid(mINI::INIStructure& ini, torch::Device& device, std::shared_ptr<Supervised>& model, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform);
 
 struct Metrics {
 	double recall;
 	double precision;
 	double f1_score;
 	int FN;
+	int FP;
 };
 
 int count_images_in_label_folder(const std::string& base_path);
-Metrics compute_metrics_from_confusion_matrix(const std::vector<std::vector<int>>& cm);
-std::vector<std::vector<int>> compute_confusion_matrix_from_dirs(
+Metrics compute_metrics_from_confusion_matrix(
 	const std::string& goodPath,
 	const std::string& ngPath,
 	const std::string& overkillPath,

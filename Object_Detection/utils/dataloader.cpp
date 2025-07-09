@@ -23,7 +23,7 @@
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderWithPaths} -> constructor
 // --------------------------------------------------------------------
-DataLoader::Data1dFolderWithPaths::Data1dFolderWithPaths(datasets::Data1dFolderWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::Data1dFolderWithPaths::Data1dFolderWithPaths(datasets::Data1dFolderWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -34,18 +34,18 @@ DataLoader::Data1dFolderWithPaths::Data1dFolderWithPaths(datasets::Data1dFolderW
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -57,7 +57,7 @@ DataLoader::Data1dFolderWithPaths::Data1dFolderWithPaths(datasets::Data1dFolderW
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::Data1dFolderWithPaths::operator()(std::tuple<torch::Tensor, std::vector<std::string>> &data){
+bool DataLoader::Data1dFolderWithPaths::operator()(std::tuple<torch::Tensor, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -67,13 +67,13 @@ bool DataLoader::Data1dFolderWithPaths::operator()(std::tuple<torch::Tensor, std
     torch::Tensor data1, tensor;
     std::vector<std::string> data2;
     std::tuple<torch::Tensor, std::string> group;
-    std::tuple<torch::Tensor, std::string> *data_before;
+    std::tuple<torch::Tensor, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -81,16 +81,16 @@ bool DataLoader::Data1dFolderWithPaths::operator()(std::tuple<torch::Tensor, std
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -99,35 +99,35 @@ bool DataLoader::Data1dFolderWithPaths::operator()(std::tuple<torch::Tensor, std
     data1 = std::get<0>(data_before[0]);
     data1 = torch::unsqueeze(data1, /*dim=*/0);
     data2.push_back(std::get<1>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor = std::get<0>(group);
         tensor = torch::unsqueeze(tensor, /*dim=*/0);  // {D} ===> {1,D}
-        data1 = torch::cat({data1, tensor}, /*dim=*/0);  // {i,D} + {1,D} ===> {i+1,D}
+        data1 = torch::cat({ data1, tensor }, /*dim=*/0);  // {i,D} + {1,D} ===> {i+1,D}
         data2.push_back(std::get<1>(group));
     }
     data1 = data1.contiguous().detach().clone();
-    
+
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2};  // {N,D} (data), {N} (fnames)
+    data = { data1, data2 };  // {N,D} (data), {N} (fnames)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // --------------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderWithPaths} -> function{reset}
 // --------------------------------------------------------------------------
-void DataLoader::Data1dFolderWithPaths::reset(){
+void DataLoader::Data1dFolderWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -136,7 +136,7 @@ void DataLoader::Data1dFolderWithPaths::reset(){
 // ---------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderWithPaths} -> function{get_count_max}
 // ---------------------------------------------------------------------------------
-size_t DataLoader::Data1dFolderWithPaths::get_count_max(){
+size_t DataLoader::Data1dFolderWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -144,7 +144,7 @@ size_t DataLoader::Data1dFolderWithPaths::get_count_max(){
 // -------------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderPairWithPaths} -> constructor
 // -------------------------------------------------------------------------
-DataLoader::Data1dFolderPairWithPaths::Data1dFolderPairWithPaths(datasets::Data1dFolderPairWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::Data1dFolderPairWithPaths::Data1dFolderPairWithPaths(datasets::Data1dFolderPairWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -155,18 +155,18 @@ DataLoader::Data1dFolderPairWithPaths::Data1dFolderPairWithPaths(datasets::Data1
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -178,7 +178,7 @@ DataLoader::Data1dFolderPairWithPaths::Data1dFolderPairWithPaths(datasets::Data1
 // -----------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderPairWithPaths} -> operator
 // -----------------------------------------------------------------------
-bool DataLoader::Data1dFolderPairWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>> &data){
+bool DataLoader::Data1dFolderPairWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -188,13 +188,13 @@ bool DataLoader::Data1dFolderPairWithPaths::operator()(std::tuple<torch::Tensor,
     torch::Tensor data1, data2, tensor1, tensor2;
     std::vector<std::string> data3, data4;
     std::tuple<torch::Tensor, torch::Tensor, std::string, std::string> group;
-    std::tuple<torch::Tensor, torch::Tensor, std::string, std::string> *data_before;
+    std::tuple<torch::Tensor, torch::Tensor, std::string, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -202,16 +202,16 @@ bool DataLoader::Data1dFolderPairWithPaths::operator()(std::tuple<torch::Tensor,
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, torch::Tensor, std::string, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -223,14 +223,14 @@ bool DataLoader::Data1dFolderPairWithPaths::operator()(std::tuple<torch::Tensor,
     data2 = torch::unsqueeze(data2, /*dim=*/0);
     data3.push_back(std::get<2>(data_before[0]));
     data4.push_back(std::get<3>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
         tensor1 = torch::unsqueeze(tensor1, /*dim=*/0);  // {D} ===> {1,D}
-        data1 = torch::cat({data1, tensor1}, /*dim=*/0);  // {i,D} + {1,D} ===> {i+1,D}
+        data1 = torch::cat({ data1, tensor1 }, /*dim=*/0);  // {i,D} + {1,D} ===> {i+1,D}
         tensor2 = std::get<1>(group);
         tensor2 = torch::unsqueeze(tensor2, /*dim=*/0);  // {D} ===> {1,D}
-        data2 = torch::cat({data2, tensor2}, /*dim=*/0);  // {i,D} + {1,D} ===> {i+1,D}
+        data2 = torch::cat({ data2, tensor2 }, /*dim=*/0);  // {i,D} + {1,D} ===> {i+1,D}
         data3.push_back(std::get<2>(group));
         data4.push_back(std::get<3>(group));
     }
@@ -238,26 +238,26 @@ bool DataLoader::Data1dFolderPairWithPaths::operator()(std::tuple<torch::Tensor,
     data2 = data2.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
         data2 = data2.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2, data3, data4};  // {N,D} (data1), {N,D} (data2), {N} (fnames1), {N} (fnames2)
+    data = { data1, data2, data3, data4 };  // {N,D} (data1), {N,D} (data2), {N} (fnames1), {N} (fnames2)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // -----------------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderPairWithPaths} -> function{reset}
 // -----------------------------------------------------------------------------
-void DataLoader::Data1dFolderPairWithPaths::reset(){
+void DataLoader::Data1dFolderPairWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -266,7 +266,7 @@ void DataLoader::Data1dFolderPairWithPaths::reset(){
 // -------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{Data1dFolderPairWithPaths} -> function{get_count_max}
 // -------------------------------------------------------------------------------------
-size_t DataLoader::Data1dFolderPairWithPaths::get_count_max(){
+size_t DataLoader::Data1dFolderPairWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -280,7 +280,7 @@ size_t DataLoader::Data1dFolderPairWithPaths::get_count_max(){
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderWithPaths} -> constructor
 // --------------------------------------------------------------------
-DataLoader::ImageFolderWithPaths::ImageFolderWithPaths(datasets::ImageFolderWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::ImageFolderWithPaths::ImageFolderWithPaths(datasets::ImageFolderWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -291,18 +291,18 @@ DataLoader::ImageFolderWithPaths::ImageFolderWithPaths(datasets::ImageFolderWith
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -314,7 +314,7 @@ DataLoader::ImageFolderWithPaths::ImageFolderWithPaths(datasets::ImageFolderWith
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::ImageFolderWithPaths::operator()(std::tuple<torch::Tensor, std::vector<std::string>> &data){
+bool DataLoader::ImageFolderWithPaths::operator()(std::tuple<torch::Tensor, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -324,13 +324,13 @@ bool DataLoader::ImageFolderWithPaths::operator()(std::tuple<torch::Tensor, std:
     torch::Tensor data1, tensor;
     std::vector<std::string> data2;
     std::tuple<torch::Tensor, std::string> group;
-    std::tuple<torch::Tensor, std::string> *data_before;
+    std::tuple<torch::Tensor, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -338,16 +338,16 @@ bool DataLoader::ImageFolderWithPaths::operator()(std::tuple<torch::Tensor, std:
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -356,35 +356,35 @@ bool DataLoader::ImageFolderWithPaths::operator()(std::tuple<torch::Tensor, std:
     data1 = std::get<0>(data_before[0]);
     data1 = torch::unsqueeze(data1, /*dim=*/0);
     data2.push_back(std::get<1>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor = std::get<0>(group);
         tensor = torch::unsqueeze(tensor, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data1 = torch::cat({data1, tensor}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data1 = torch::cat({ data1, tensor }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         data2.push_back(std::get<1>(group));
     }
     data1 = data1.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2};  // {N,C,H,W} (images), {N} (fnames)
+    data = { data1, data2 };  // {N,C,H,W} (images), {N} (fnames)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // -------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderWithPaths} -> function{reset}
 // -------------------------------------------------------------------------
-void DataLoader::ImageFolderWithPaths::reset(){
+void DataLoader::ImageFolderWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -393,7 +393,7 @@ void DataLoader::ImageFolderWithPaths::reset(){
 // ---------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderWithPaths} -> function{get_count_max}
 // ---------------------------------------------------------------------------------
-size_t DataLoader::ImageFolderWithPaths::get_count_max(){
+size_t DataLoader::ImageFolderWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -401,7 +401,7 @@ size_t DataLoader::ImageFolderWithPaths::get_count_max(){
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairWithPaths} -> constructor
 // --------------------------------------------------------------------
-DataLoader::ImageFolderPairWithPaths::ImageFolderPairWithPaths(datasets::ImageFolderPairWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::ImageFolderPairWithPaths::ImageFolderPairWithPaths(datasets::ImageFolderPairWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -412,18 +412,18 @@ DataLoader::ImageFolderPairWithPaths::ImageFolderPairWithPaths(datasets::ImageFo
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -435,7 +435,7 @@ DataLoader::ImageFolderPairWithPaths::ImageFolderPairWithPaths(datasets::ImageFo
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::ImageFolderPairWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>> &data){
+bool DataLoader::ImageFolderPairWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -445,13 +445,13 @@ bool DataLoader::ImageFolderPairWithPaths::operator()(std::tuple<torch::Tensor, 
     torch::Tensor data1, data2, tensor1, tensor2;
     std::vector<std::string> data3, data4;
     std::tuple<torch::Tensor, torch::Tensor, std::string, std::string> group;
-    std::tuple<torch::Tensor, torch::Tensor, std::string, std::string> *data_before;
+    std::tuple<torch::Tensor, torch::Tensor, std::string, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -459,16 +459,16 @@ bool DataLoader::ImageFolderPairWithPaths::operator()(std::tuple<torch::Tensor, 
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, torch::Tensor, std::string, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -480,14 +480,14 @@ bool DataLoader::ImageFolderPairWithPaths::operator()(std::tuple<torch::Tensor, 
     data2 = torch::unsqueeze(data2, /*dim=*/0);
     data3.push_back(std::get<2>(data_before[0]));
     data4.push_back(std::get<3>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
         tensor1 = torch::unsqueeze(tensor1, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data1 = torch::cat({data1, tensor1}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data1 = torch::cat({ data1, tensor1 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         tensor2 = std::get<1>(group);
         tensor2 = torch::unsqueeze(tensor2, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data2 = torch::cat({data2, tensor2}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data2 = torch::cat({ data2, tensor2 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         data3.push_back(std::get<2>(group));
         data4.push_back(std::get<3>(group));
     }
@@ -495,26 +495,26 @@ bool DataLoader::ImageFolderPairWithPaths::operator()(std::tuple<torch::Tensor, 
     data2 = data2.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
         data2 = data2.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2, data3, data4};  // {N,C,H,W} (images1), {N,C,H,W} (images2), {N} (fnames1), {N} (fnames2)
+    data = { data1, data2, data3, data4 };  // {N,C,H,W} (images1), {N,C,H,W} (images2), {N} (fnames1), {N} (fnames2)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // ----------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairWithPaths} -> function{reset}
 // ----------------------------------------------------------------------------
-void DataLoader::ImageFolderPairWithPaths::reset(){
+void DataLoader::ImageFolderPairWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -523,7 +523,7 @@ void DataLoader::ImageFolderPairWithPaths::reset(){
 // ------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairWithPaths} -> function{get_count_max}
 // ------------------------------------------------------------------------------------
-size_t DataLoader::ImageFolderPairWithPaths::get_count_max(){
+size_t DataLoader::ImageFolderPairWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -531,7 +531,7 @@ size_t DataLoader::ImageFolderPairWithPaths::get_count_max(){
 // ------------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairAndRandomSamplingWithPaths} -> constructor
 // ------------------------------------------------------------------------------------------
-DataLoader::ImageFolderPairAndRandomSamplingWithPaths::ImageFolderPairAndRandomSamplingWithPaths(datasets::ImageFolderPairAndRandomSamplingWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::ImageFolderPairAndRandomSamplingWithPaths::ImageFolderPairAndRandomSamplingWithPaths(datasets::ImageFolderPairAndRandomSamplingWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -542,18 +542,18 @@ DataLoader::ImageFolderPairAndRandomSamplingWithPaths::ImageFolderPairAndRandomS
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -566,7 +566,7 @@ DataLoader::ImageFolderPairAndRandomSamplingWithPaths::ImageFolderPairAndRandomS
 // ---------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairAndRandomSamplingWithPaths} -> operator
 // ---------------------------------------------------------------------------------------
-bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>, std::vector<std::string>> &data){
+bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -576,13 +576,13 @@ bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tupl
     torch::Tensor data1, data2, data3, tensor1, tensor2, tensor3;
     std::vector<std::string> data4, data5, data6;
     std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::string, std::string, std::string> group;
-    std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::string, std::string, std::string> *data_before;
+    std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::string, std::string, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -590,22 +590,22 @@ bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tupl
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, std::string, std::string, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), this->int_rand(this->mt), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
 
         std::vector<int> rand_vec(mini_batch_size);
-        for (i = 0; i < mini_batch_size; i++){
+        for (i = 0; i < mini_batch_size; i++) {
             rand_vec.at(i) = this->int_rand(this->mt);
         }
 
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), rand_vec.at(i), data_before[i]);
         }
 
@@ -621,17 +621,17 @@ bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tupl
     data4.push_back(std::get<3>(data_before[0]));
     data5.push_back(std::get<4>(data_before[0]));
     data6.push_back(std::get<5>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
         tensor1 = torch::unsqueeze(tensor1, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data1 = torch::cat({data1, tensor1}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data1 = torch::cat({ data1, tensor1 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         tensor2 = std::get<1>(group);
         tensor2 = torch::unsqueeze(tensor2, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data2 = torch::cat({data2, tensor2}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data2 = torch::cat({ data2, tensor2 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         tensor3 = std::get<2>(group);
         tensor3 = torch::unsqueeze(tensor3, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data3 = torch::cat({data3, tensor3}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data3 = torch::cat({ data3, tensor3 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         data4.push_back(std::get<3>(group));
         data5.push_back(std::get<4>(group));
         data6.push_back(std::get<5>(group));
@@ -641,7 +641,7 @@ bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tupl
     data3 = data3.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
         data2 = data2.pin_memory();
         data3 = data3.pin_memory();
@@ -649,19 +649,19 @@ bool DataLoader::ImageFolderPairAndRandomSamplingWithPaths::operator()(std::tupl
 
     // Post Processing
     this->count++;
-    data = {data1, data2, data3, data4, data5, data6};  // {N,C,H,W} (images1), {N,C,H,W} (images2), {N,C,H,W} (images_rand), {N} (fnames1), {N} (fnames2), {N} (fnames_rand)
+    data = { data1, data2, data3, data4, data5, data6 };  // {N,C,H,W} (images1), {N,C,H,W} (images2), {N,C,H,W} (images_rand), {N} (fnames1), {N} (fnames2), {N} (fnames_rand)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // ----------------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairAndRandomSamplingWithPaths} -> function{reset}
 // ----------------------------------------------------------------------------------------------
-void DataLoader::ImageFolderPairAndRandomSamplingWithPaths::reset(){
+void DataLoader::ImageFolderPairAndRandomSamplingWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -670,7 +670,7 @@ void DataLoader::ImageFolderPairAndRandomSamplingWithPaths::reset(){
 // ------------------------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderPairAndRandomSamplingWithPaths} -> function{get_count_max}
 // ------------------------------------------------------------------------------------------------------
-size_t DataLoader::ImageFolderPairAndRandomSamplingWithPaths::get_count_max(){
+size_t DataLoader::ImageFolderPairAndRandomSamplingWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -678,7 +678,7 @@ size_t DataLoader::ImageFolderPairAndRandomSamplingWithPaths::get_count_max(){
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderSegmentWithPaths} -> constructor
 // --------------------------------------------------------------------
-DataLoader::ImageFolderSegmentWithPaths::ImageFolderSegmentWithPaths(datasets::ImageFolderSegmentWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::ImageFolderSegmentWithPaths::ImageFolderSegmentWithPaths(datasets::ImageFolderSegmentWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -689,18 +689,18 @@ DataLoader::ImageFolderSegmentWithPaths::ImageFolderSegmentWithPaths(datasets::I
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -712,7 +712,7 @@ DataLoader::ImageFolderSegmentWithPaths::ImageFolderSegmentWithPaths(datasets::I
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderSegmentWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::ImageFolderSegmentWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>> &data){
+bool DataLoader::ImageFolderSegmentWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>, std::vector<std::string>, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -723,13 +723,13 @@ bool DataLoader::ImageFolderSegmentWithPaths::operator()(std::tuple<torch::Tenso
     std::vector<std::string> data3, data4;
     std::vector<std::tuple<unsigned char, unsigned char, unsigned char>> data5;
     std::tuple<torch::Tensor, torch::Tensor, std::string, std::string, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>> group;
-    std::tuple<torch::Tensor, torch::Tensor, std::string, std::string, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>> *data_before;
+    std::tuple<torch::Tensor, torch::Tensor, std::string, std::string, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -737,16 +737,16 @@ bool DataLoader::ImageFolderSegmentWithPaths::operator()(std::tuple<torch::Tenso
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, torch::Tensor, std::string, std::string, std::vector<std::tuple<unsigned char, unsigned char, unsigned char>>>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -759,14 +759,14 @@ bool DataLoader::ImageFolderSegmentWithPaths::operator()(std::tuple<torch::Tenso
     data3.push_back(std::get<2>(data_before[0]));
     data4.push_back(std::get<3>(data_before[0]));
     data5 = std::get<4>(data_before[0]);
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
         tensor1 = torch::unsqueeze(tensor1, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data1 = torch::cat({data1, tensor1}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data1 = torch::cat({ data1, tensor1 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         tensor2 = std::get<1>(group);
         tensor2 = torch::unsqueeze(tensor2, /*dim=*/0);  // {H,W} ===> {1,H,W}
-        data2 = torch::cat({data2, tensor2}, /*dim=*/0);  // {i,H,W} + {1,H,W} ===> {i+1,H,W}
+        data2 = torch::cat({ data2, tensor2 }, /*dim=*/0);  // {i,H,W} + {1,H,W} ===> {i+1,H,W}
         data3.push_back(std::get<2>(group));
         data4.push_back(std::get<3>(group));
     }
@@ -774,26 +774,26 @@ bool DataLoader::ImageFolderSegmentWithPaths::operator()(std::tuple<torch::Tenso
     data2 = data2.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
         data2 = data2.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2, data3, data4, data5};  // {N,C,H,W} (images1), {N,H,W} (images2), {N} (fnames1), {N} (fnames2), {L} (label_palette)
+    data = { data1, data2, data3, data4, data5 };  // {N,C,H,W} (images1), {N,H,W} (images2), {N} (fnames1), {N} (fnames2), {L} (label_palette)
     delete[] data_before;
 
     // End Processings
     return true;
-    
+
 }
 
 
 // -------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderSegmentWithPaths} -> function{reset}
 // -------------------------------------------------------------------------------
-void DataLoader::ImageFolderSegmentWithPaths::reset(){
+void DataLoader::ImageFolderSegmentWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -802,7 +802,7 @@ void DataLoader::ImageFolderSegmentWithPaths::reset(){
 // ---------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderSegmentWithPaths} -> function{get_count_max}
 // ---------------------------------------------------------------------------------------
-size_t DataLoader::ImageFolderSegmentWithPaths::get_count_max(){
+size_t DataLoader::ImageFolderSegmentWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -810,7 +810,7 @@ size_t DataLoader::ImageFolderSegmentWithPaths::get_count_max(){
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderClassesWithPaths} -> constructor
 // --------------------------------------------------------------------
-DataLoader::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(datasets::ImageFolderClassesWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(datasets::ImageFolderClassesWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -821,18 +821,18 @@ DataLoader::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(datasets::I
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -844,7 +844,7 @@ DataLoader::ImageFolderClassesWithPaths::ImageFolderClassesWithPaths(datasets::I
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderClassesWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::ImageFolderClassesWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>> &data){
+bool DataLoader::ImageFolderClassesWithPaths::operator()(std::tuple<torch::Tensor, torch::Tensor, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -854,13 +854,13 @@ bool DataLoader::ImageFolderClassesWithPaths::operator()(std::tuple<torch::Tenso
     torch::Tensor data1, data2, tensor1, tensor2;
     std::vector<std::string> data3;
     std::tuple<torch::Tensor, torch::Tensor, std::string> group;
-    std::tuple<torch::Tensor, torch::Tensor, std::string> *data_before;
+    std::tuple<torch::Tensor, torch::Tensor, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -868,16 +868,16 @@ bool DataLoader::ImageFolderClassesWithPaths::operator()(std::tuple<torch::Tenso
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, torch::Tensor, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -888,40 +888,40 @@ bool DataLoader::ImageFolderClassesWithPaths::operator()(std::tuple<torch::Tenso
     data2 = std::get<1>(data_before[0]);
     data2 = torch::unsqueeze(data2, /*dim=*/0);
     data3.push_back(std::get<2>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
         tensor1 = torch::unsqueeze(tensor1, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data1 = torch::cat({data1, tensor1}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data1 = torch::cat({ data1, tensor1 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         tensor2 = std::get<1>(group);
         tensor2 = torch::unsqueeze(tensor2, /*dim=*/0);  // {} ===> {1}
-        data2 = torch::cat({data2, tensor2}, /*dim=*/0);  // {i} + {1} ===> {i+1}
+        data2 = torch::cat({ data2, tensor2 }, /*dim=*/0);  // {i} + {1} ===> {i+1}
         data3.push_back(std::get<2>(group));
     }
     data1 = data1.contiguous().detach().clone();
     data2 = data2.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
         data2 = data2.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2, data3};  // {N,C,H,W} (images), {N} (class ids), {N} (fnames)
+    data = { data1, data2, data3 };  // {N,C,H,W} (images), {N} (class ids), {N} (fnames)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // -------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderClassesWithPaths} -> function{reset}
 // -------------------------------------------------------------------------------
-void DataLoader::ImageFolderClassesWithPaths::reset(){
+void DataLoader::ImageFolderClassesWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -930,7 +930,7 @@ void DataLoader::ImageFolderClassesWithPaths::reset(){
 // ---------------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderClassesWithPaths} -> function{get_count_max}
 // ---------------------------------------------------------------------------------------
-size_t DataLoader::ImageFolderClassesWithPaths::get_count_max(){
+size_t DataLoader::ImageFolderClassesWithPaths::get_count_max() {
     return this->count_max;
 }
 
@@ -938,7 +938,7 @@ size_t DataLoader::ImageFolderClassesWithPaths::get_count_max(){
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderBBWithPaths} -> constructor
 // --------------------------------------------------------------------
-DataLoader::ImageFolderBBWithPaths::ImageFolderBBWithPaths(datasets::ImageFolderBBWithPaths &dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_){
+DataLoader::ImageFolderBBWithPaths::ImageFolderBBWithPaths(datasets::ImageFolderBBWithPaths& dataset_, const size_t batch_size_, const bool shuffle_, const size_t num_workers_, const bool pin_memory_, const bool drop_last_) {
 
     this->dataset = dataset_;
     this->batch_size = batch_size_;
@@ -949,18 +949,18 @@ DataLoader::ImageFolderBBWithPaths::ImageFolderBBWithPaths(datasets::ImageFolder
 
     this->size = this->dataset.size();
     this->idx = std::vector<size_t>(this->size);
-    for (size_t i = 0; i < this->size; i++){
+    for (size_t i = 0; i < this->size; i++) {
         this->idx.at(i) = i;
     }
 
     this->count = 0;
-    if (this->drop_last){
+    if (this->drop_last) {
         this->count_max = std::floor((float)this->size / (float)this->batch_size);
-        if ((this->count_max == 0) && (this->size > 0)){
+        if ((this->count_max == 0) && (this->size > 0)) {
             this->count_max = 1;
         }
     }
-    else{
+    else {
         this->count_max = std::ceil((float)this->size / (float)this->batch_size);
     }
 
@@ -972,7 +972,7 @@ DataLoader::ImageFolderBBWithPaths::ImageFolderBBWithPaths(datasets::ImageFolder
 // --------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderBBWithPaths} -> operator
 // --------------------------------------------------------------------
-bool DataLoader::ImageFolderBBWithPaths::operator()(std::tuple<torch::Tensor, std::vector<std::tuple<torch::Tensor, torch::Tensor>>, std::vector<std::string>, std::vector<std::string>> &data){
+bool DataLoader::ImageFolderBBWithPaths::operator()(std::tuple<torch::Tensor, std::vector<std::tuple<torch::Tensor, torch::Tensor>>, std::vector<std::string>, std::vector<std::string>>& data) {
 
     // (0) Initialization and Declaration
     size_t i;
@@ -983,13 +983,13 @@ bool DataLoader::ImageFolderBBWithPaths::operator()(std::tuple<torch::Tensor, st
     std::vector<std::tuple<torch::Tensor, torch::Tensor>> data2;
     std::vector<std::string> data3, data4;
     std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>, std::string, std::string> group;
-    std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>, std::string, std::string> *data_before;
+    std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>, std::string, std::string>* data_before;
 
     // (1) Special Handling on Certain Count
-    if ((this->count == 0) && this->shuffle){
+    if ((this->count == 0) && this->shuffle) {
         std::shuffle(this->idx.begin(), this->idx.end(), this->mt);
     }
-    else if(this->count == this->count_max){
+    else if (this->count == this->count_max) {
         this->count = 0;
         return false;
     }
@@ -997,16 +997,16 @@ bool DataLoader::ImageFolderBBWithPaths::operator()(std::tuple<torch::Tensor, st
     // (2) Get Mini Batch Data
     data_before = new std::tuple<torch::Tensor, std::tuple<torch::Tensor, torch::Tensor>, std::string, std::string>[mini_batch_size];
     // (2.1) Get Mini Batch Data using Single Thread
-    if (this->num_workers == 0){
-        for (i = 0; i < mini_batch_size; i++){
+    if (this->num_workers == 0) {
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
     // (2.2) Get Mini Batch Data using Multi Thread
-    else{
+    else {
         omp_set_num_threads(this->num_workers);
-        #pragma omp parallel for
-        for (i = 0; i < mini_batch_size; i++){
+#pragma omp parallel for
+        for (i = 0; i < mini_batch_size; i++) {
             this->dataset.get(this->idx.at(idx_start + i), data_before[i]);
         }
     }
@@ -1017,11 +1017,11 @@ bool DataLoader::ImageFolderBBWithPaths::operator()(std::tuple<torch::Tensor, st
     data2.push_back(std::get<1>(data_before[0]));
     data3.push_back(std::get<2>(data_before[0]));
     data4.push_back(std::get<3>(data_before[0]));
-    for (i = 1; i < mini_batch_size; i++){
+    for (i = 1; i < mini_batch_size; i++) {
         group = data_before[i];
         tensor1 = std::get<0>(group);
         tensor1 = torch::unsqueeze(tensor1, /*dim=*/0);  // {C,H,W} ===> {1,C,H,W}
-        data1 = torch::cat({data1, tensor1}, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
+        data1 = torch::cat({ data1, tensor1 }, /*dim=*/0);  // {i,C,H,W} + {1,C,H,W} ===> {i+1,C,H,W}
         data2.push_back(std::get<1>(group));  // {i, ({BB_n}, {BB_n,4}) } + {1, ({BB_n}, {BB_n,4}) } ===> {i+1, ({BB_n}, {BB_n,4}) }
         data3.push_back(std::get<2>(group));
         data4.push_back(std::get<3>(group));
@@ -1029,25 +1029,25 @@ bool DataLoader::ImageFolderBBWithPaths::operator()(std::tuple<torch::Tensor, st
     data1 = data1.contiguous().detach().clone();
 
     // (4) Pin
-    if (this->pin_memory){
+    if (this->pin_memory) {
         data1 = data1.pin_memory();
     }
 
     // Post Processing
     this->count++;
-    data = {data1, data2, data3, data4};  // {N,C,H,W} (images), {N, ({BB_n}, {BB_n,4}) } (annotations), {N} (fnames1), {N} (fnames2)
+    data = { data1, data2, data3, data4 };  // {N,C,H,W} (images), {N, ({BB_n}, {BB_n,4}) } (annotations), {N} (fnames1), {N} (fnames2)
     delete[] data_before;
 
     // End Processing
     return true;
-    
+
 }
 
 
 // ---------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderBBWithPaths} -> function{reset}
 // ---------------------------------------------------------------------------
-void DataLoader::ImageFolderBBWithPaths::reset(){
+void DataLoader::ImageFolderBBWithPaths::reset() {
     this->count = 0;
     return;
 }
@@ -1056,6 +1056,6 @@ void DataLoader::ImageFolderBBWithPaths::reset(){
 // -----------------------------------------------------------------------------------
 // namespace{DataLoader} -> class{ImageFolderBBWithPaths} -> function{get_count_max}
 // -----------------------------------------------------------------------------------
-size_t DataLoader::ImageFolderBBWithPaths::get_count_max(){
+size_t DataLoader::ImageFolderBBWithPaths::get_count_max() {
     return this->count_max;
 }

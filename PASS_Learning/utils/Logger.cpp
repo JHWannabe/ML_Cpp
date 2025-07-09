@@ -1,18 +1,20 @@
 #include "logger.h"
 
-
+// Constructor: Initializes logger with default log level
 Logger::Logger()
 {
     this->logLevel = LOG_LEVEL_ERROR;
     this->logPath = MakeLogFolder();
 }
 
+// Constructor: Initializes logger with specified log level
 Logger::Logger(int level)
 {
     this->logLevel = level;
     this->logPath = MakeLogFolder();
 }
 
+// Creates log folder if it does not exist and returns the log path
 std::string Logger::MakeLogFolder()
 {
     WCHAR executePath[MAX_PATH];
@@ -38,11 +40,10 @@ std::string Logger::MakeLogFolder()
         return logPath;
 }
 
+// Returns current timestamp as a string
 std::string Logger::getTimestamp()
 {
     std::string timeStamp;
-    //time_t currentSec = time(NULL);
-    //tm* t = localtime(&currentSec);
 
     time_t currentSec;
     struct tm t;
@@ -59,6 +60,7 @@ std::string Logger::getTimestamp()
     return timeStamp;
 }
 
+// Writes a log message to file and optionally to console
 void Logger::WriteLog(const char* funcName, int line, int lv, const char* str, ...)
 {
     time_t currentSec;
@@ -79,6 +81,7 @@ void Logger::WriteLog(const char* funcName, int line, int lv, const char* str, .
     }
 
     char level[10];
+    // Set log level string
     switch (lv)
     {
         case(LOG_LEVEL_OFF): strcpy_s(level, "[TEST]"); break;
@@ -90,25 +93,22 @@ void Logger::WriteLog(const char* funcName, int line, int lv, const char* str, .
         case(LOG_LEVEL_TRACE): strcpy_s(level, "[TRACE]"); break;
     }
 
-    //char* result = NULL;
-    //result = (char*)malloc(sizeof(char) * (21 + strlen(funcName) + strlen(str) + 30));
-    //sprintf_s(result, sizeof(buffSize), "%s %s [%s:%d] - %s\n", level, getTimestamp().c_str(), funcName, line, str);
+    // Format log message
     char message[2048];
     sprintf_s(message, sizeof(message), "%s %s [%s:%d] - %s\n", level, getTimestamp().c_str(), funcName, line, str);
 
     va_list args;
 
+    // Write formatted message to log file
     va_start(args, str);
     vfprintf(fp, message, args);
     va_end(args);
 
+    // Optionally print to console if log level is sufficient
     va_start(args, str);
     if (this->logLevel >= lv)
         vprintf(message, args);
     va_end(args);
-
-    //if (result != NULL)
-    //    free(result);
 
     if (fp != NULL)
         fclose(fp);

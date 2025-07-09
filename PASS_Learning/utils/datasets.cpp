@@ -82,7 +82,7 @@ cv::Mat datasets::GRAY_Loader(std::string& path) {
 // -------------------------------------------------------------------------
 // namespace{datasets} -> class{SegmentImageWithPaths} -> constructor
 // -------------------------------------------------------------------------
-datasets::SegmentImageWithPaths::SegmentImageWithPaths(const std::string root, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform, const std::string mode, cv::Size resize) {
+datasets::SegmentImageWithPaths::SegmentImageWithPaths(const std::string root, std::vector<transforms_Compose>& imageTransform, std::vector<transforms_Compose>& labelTransform, const std::string mode, cv::Size resize) : augmentor() {
 	datasets::collect(root, "", this->paths, this->fnames);
 	std::sort(this->paths.begin(), this->paths.end());
 	std::sort(this->fnames.begin(), this->fnames.end());
@@ -101,11 +101,14 @@ void datasets::SegmentImageWithPaths::get(const size_t idx, std::tuple<torch::Te
 	cv::Mat img, label;
 	std::tuple<cv::Mat> augmentImgs;
 
+	// Load image in BGR format
 	img = datasets::RGB_Loader(file_path);
+	// Initialize label as a zero matrix
 	label = cv::Mat::zeros(this->resize, CV_8UC1);
 
 	if (this->mode == "super") {
 		std::string label_path = file_path;
+		// If the file is not found, try to find the corresponding label image
 		if (file_path.find("notfound") != std::string::npos) {
 			size_t pos;
 			if ((pos = label_path.find("bmp")) != std::string::npos) { label_path.replace(pos, 3, "jpg"); }
@@ -114,35 +117,39 @@ void datasets::SegmentImageWithPaths::get(const size_t idx, std::tuple<torch::Te
 		}
 	}
 	else if (this->mode == "unsuper") {
-		Augmentation augmentor;
-		std::tie(img, label) = augmentor.generateAnomaly(file_path, this->resize);
+		// Generate anomaly image and mask for unsupervised mode
+		std::tie(img, label) = this->augmentor.generateAnomaly(file_path, this->resize);
 	}
 	else if (this->mode == "test" || this->mode == "valid") {
-		if (this->paths.at(idx).find("NG") != std::string::npos) { this->y_true = 0; }
-		if (this->paths.at(idx).find("notfound") != std::string::npos) { this->y_true = 0; }
+		// For test/valid mode, if NG or notfound, set y_true and load label
+		if (this->paths.at(idx).find("NG") != std::string::npos || this->paths.at(idx).find("notfound") != std::string::npos) {
+			this->y_true = 0;
 
-		std::string label_path = this->paths.at(idx);
-		size_t pos;
-		if ((pos = label_path.find("bmp")) != std::string::npos) { label_path.replace(pos, 4, "jpg"); }
-		if ((pos = label_path.find("origin")) != std::string::npos) { label_path.replace(pos, 6, "label"); }
-		label = datasets::GRAY_Loader(label_path);
+			std::string label_path = this->paths.at(idx);
+			size_t pos;
+			if ((pos = label_path.find("bmp")) != std::string::npos) { label_path.replace(pos, 4, "jpg"); }
+			if ((pos = label_path.find("origin")) != std::string::npos) { label_path.replace(pos, 6, "label"); }
+			label = datasets::GRAY_Loader(label_path);
+		}
 	}
 
+	// Resize image and label to the target size
 	cv::resize(img, img, this->resize);
 	cv::resize(label, label, this->resize);
 
+	// Apply image and label transforms
 	torch::Tensor image_tensor = transforms::apply(this->imageTransform, img);
 	torch::Tensor label_tensor = transforms::apply(this->labelTransform, label).squeeze(0);
 
-	// 1) float 타입으로 변환
+	// Convert label tensor to float32
 	label_tensor = label_tensor.to(torch::kFloat32);
-	// 2) 현재 최대값 추출
+	// Normalize label tensor if max value is greater than 0
 	float max_val = label_tensor.max().item<float>();
-	// 3) (max_val > 0)일 때만 정규화
 	if (max_val > 0.0f) {
 		label_tensor = label_tensor / max_val;
 	}
 
+	// Set output tuple
 	data = { image_tensor.detach().clone(), label_tensor.detach().clone(), fname, this->y_true, img, label };
 
 	return;
@@ -160,7 +167,7 @@ size_t datasets::SegmentImageWithPaths::size() {
 // -------------------------------------------------------------------------
 std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string& file_path, cv::Size resize)
 {
-	// (0) p 값을 0~1 사이 난수로 생성
+	// (0) Generate a random value p between 0 and 1
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> p_dist(0.0f, 1.0f);
@@ -171,13 +178,21 @@ std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string
 	cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC1);
 	
 	if (p > 0.5) {
-		// (1) Generate Mask		
+		// (1) Generate Mask using Perlin noise
 		cv::Mat mask_f, mask = generatePerlinNoise(img);
 		cv::cvtColor(mask, mask_f, cv::COLOR_GRAY2BGR);
 
 		// (2) Generate Stable Diffusion Image
-		cv::Mat stableDiffusionImg = stableDiffusion(file_path);
-		cv::resize(stableDiffusionImg, stableDiffusionImg, resize);
+		cv::Mat stableDiffusionImg;
+		if (this->stable_count % 4 == 0 || this->stable_cache.empty()) {
+			stableDiffusionImg = stableDiffusion(file_path);
+			cv::resize(stableDiffusionImg, stableDiffusionImg, resize);
+			this->stable_cache = stableDiffusionImg.clone();
+		}
+		else {
+			stableDiffusionImg = this->stable_cache.clone();
+		}
+		this->stable_count++;
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -186,6 +201,7 @@ std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string
 		cv::Mat stable_f, img_f;
 		stableDiffusionImg.convertTo(stable_f, CV_32FC3);
 		img.convertTo(img_f, CV_32FC3);
+		// Blend stable diffusion image and original image using the mask and factor
 		cv::Mat anomalySourceImg = factor * mask_f.mul(stable_f) + (1.0f - factor) * (mask_f.mul(img_f));
 		cv::cvtColor(anomalySourceImg, anomalySourceImg, cv::COLOR_BGR2RGB);
 
@@ -194,12 +210,15 @@ std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string
 		anomalySourceImg = temp + anomalySourceImg;
 		img = anomalySourceImg;
 		img.convertTo(img, CV_8UC3);
+		mask.convertTo(mask, CV_8UC1);
 
 		return std::make_tuple(img, mask*255);
 	}
 	else {
+		// Apply random augmentations to the image
 		cv::Mat structureSourceImg = rand_augment(img);
 
+		// Check if the image size is divisible by grid_size
 		assert(resize_w % this->grid_size == 0 && resize_h % this->grid_size == 0);
 
 		int gw = structureSourceImg.cols / this->grid_size;
@@ -212,11 +231,11 @@ std::tuple<cv::Mat, cv::Mat> datasets::Augmentation::generateAnomaly(std::string
 		for (int y = 0; y < structureSourceImg.rows; y += gh) {
 			for (int x = 0; x < structureSourceImg.cols; x += gw) {
 				cv::Rect roi(x, y, gw, gh);
-				blocks[idx++] = img(roi).clone();  // 안전하게 clone
+				blocks[idx++] = img(roi).clone();  // Clone for safety
 			}
 		}
 
-		// 3. Shuffle blocks
+		// 3. Shuffle blocks randomly
 		std::random_device rd;
 		std::mt19937 g(rd());
 		std::shuffle(blocks.begin(), blocks.end(), g);
@@ -244,35 +263,36 @@ cv::Mat datasets::Augmentation::generatePerlinNoise(cv::Mat& img)
 	std::mt19937 rng(std::random_device{}());
 	std::uniform_int_distribution<int> dist1(min_scale, max_scale - 1);
 
+	// Randomly select scale factors for Perlin noise
 	int scale_x = std::pow(2, dist1(rng));
 	int scale_y = std::pow(2, dist1(rng));
 
-	// Perlin 노이즈 생성
+	// Generate Perlin noise
 	cv::Mat noise = generatePerlinNoise2D(img.cols, img.rows, scale_x, scale_y);
 
-	// Affine 회전 (선택)
+	// Affine rotation (optional)
 	std::uniform_real_distribution<float> dist2(-90.0f, 90.0f);
 	float angle = dist2(rng);
 
-	// 2. 회전 중심 = 이미지 중앙
+	// Set rotation center to the center of the image
 	cv::Point2f center(noise.rows / 2.0f, noise.cols / 2.0f);
 
-	// 3. 회전 매트릭스 계산
+	// Calculate rotation matrix
 	cv::Mat rot_mat = cv::getRotationMatrix2D(center, angle, 1.0);
 
-	// 4. 회전 적용 (경계값은 0)
+	// Apply rotation (border value is 0)
 	cv::Mat dst;
 	cv::warpAffine(noise, dst, rot_mat, noise.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0));
 
-	// Threshold 적용 → float mask
+	// Apply threshold to create a float mask
 	cv::Mat mask_float, mask;
 	float threshold = 0.85f;
 	cv::threshold(noise, mask_float, threshold, 1.0, cv::THRESH_BINARY);
 
-	// float(0.0, 1.0) → uint8(0, 1)
+	// Convert float(0.0, 1.0) to float32 (0, 1)
 	mask_float.convertTo(mask, CV_32FC1);
 
-	return mask;  // CV_8UC1, 값은 0 또는 1
+	return mask;  // CV_8UC1, values are 0 or 1
 }
 
 // -------------------------------------------------------------------------
@@ -283,9 +303,10 @@ cv::Mat datasets::Augmentation::generatePerlinNoise2D(int width, int height, int
 	int dy = height / res_y;
 	cv::Mat noise = cv::Mat::zeros(height, width, CV_32F);
 
+	// Create a 2D vector to store gradient vectors for each grid point
 	std::vector<std::vector<cv::Point2f>> gradients(res_x + 1, std::vector<cv::Point2f>(res_y + 1));
 
-	// 1. 랜덤 유닛 벡터 생성 (그라디언트)
+	// 1. Generate random unit vectors (gradients) for each grid point
 	std::mt19937 rng(std::random_device{}());
 	std::uniform_real_distribution<float> dist(0, 2 * CV_PI);
 
@@ -296,35 +317,38 @@ cv::Mat datasets::Augmentation::generatePerlinNoise2D(int width, int height, int
 		}
 	}
 
-	// 2. 노이즈 생성
+	// 2. Generate Perlin noise values for each pixel
 	for (int y = 0; y < height; ++y) {
-		int gy = y / dy;
-		float fy = (float)(y % dy) / dy;
+		int gy = y / dy; // Grid cell y index
+		float fy = (float)(y % dy) / dy; // Relative y position within the cell
+		// Smoothstep interpolation for y
 		float vy = 6 * std::pow(fy, 5) - 15 * std::pow(fy, 4) + 10 * std::pow(fy, 3);
 
 		for (int x = 0; x < width; ++x) {
-			int gx = x / dx;
-			float fx = (float)(x % dx) / dx;
+			int gx = x / dx; // Grid cell x index
+			float fx = (float)(x % dx) / dx; // Relative x position within the cell
+			// Smoothstep interpolation for x
 			float vx = 6 * std::pow(fx, 5) - 15 * std::pow(fx, 4) + 10 * std::pow(fx, 3);
 
-			// 코너 그라디언트
+			// Get gradient vectors at the four corners of the cell
 			cv::Point2f g00 = gradients[gx][gy];
 			cv::Point2f g10 = gradients[gx + 1][gy];
 			cv::Point2f g01 = gradients[gx][gy + 1];
 			cv::Point2f g11 = gradients[gx + 1][gy + 1];
 
-			// 벡터
+			// Compute distance vectors from each corner to the pixel
 			cv::Point2f d00(fx, fy);
 			cv::Point2f d10(fx - 1, fy);
 			cv::Point2f d01(fx, fy - 1);
 			cv::Point2f d11(fx - 1, fy - 1);
 
-			// 내적
+			// Compute dot products between gradient and distance vectors
 			float s = g00.dot(d00);
 			float t = g10.dot(d10);
 			float u = g01.dot(d01);
 			float v = g11.dot(d11);
 
+			// Interpolate between the dot products
 			float st = s + vx * (t - s);
 			float uv = u + vx * (v - u);
 			float val = st + vy * (uv - st);
@@ -332,7 +356,7 @@ cv::Mat datasets::Augmentation::generatePerlinNoise2D(int width, int height, int
 		}
 	}
 
-	// 정규화
+	// 3. Normalize the noise values to the range [0, 1]
 	cv::normalize(noise, noise, 0, 1, cv::NORM_MINMAX);
 	return noise;
 }

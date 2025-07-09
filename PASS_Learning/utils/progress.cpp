@@ -70,11 +70,10 @@ std::string progress::current_date() {
 // ------------------------------------------------------
 // namespace{progress} -> class{display} -> constructor
 // ------------------------------------------------------
-progress::display::display(const size_t count_max_, const std::pair<size_t, size_t> epoch, const std::vector<std::string> loss_) {
-
+progress::display::display(const size_t count_max_, const std::pair<size_t, size_t> epoch, const std::vector<std::string> loss_)
+{
     this->count = 0;
     this->count_max = count_max_;
-    this->length = 0;
     this->loss = loss_;
 
     std::stringstream ss;
@@ -82,29 +81,28 @@ progress::display::display(const size_t count_max_, const std::pair<size_t, size
     std::cout << ss.str() << std::flush;
     this->header = ss.str().length();
 
-    this->loss_sum = std::vector<float>(this->loss.size(), 0.0);
-    this->loss_ave = std::vector<float>(this->loss.size(), 0.0);
+    this->loss_sum = std::vector<float>(this->loss.size(), 0.0f);
+    this->loss_ave = std::vector<float>(this->loss.size(), 0.0f);
     this->start = std::chrono::system_clock::now();
-
 }
 
-progress::display::display(const size_t count_max_, const std::string header1, const std::string header2, const std::vector<std::string> loss_) {
-
-    this->count = 0;
-    this->count_max = count_max_;
-    this->length = 0;
-    this->loss = loss_;
-
-    std::stringstream ss;
-    ss << header1 << " " << header2 << " ";
-    std::cout << ss.str() << std::flush;
-    this->header = ss.str().length();
-
-    this->loss_sum = std::vector<float>(this->loss.size(), 0.0);
-    this->loss_ave = std::vector<float>(this->loss.size(), 0.0);
-    this->start = std::chrono::system_clock::now();
-
-}
+//progress::display::display(const size_t count_max_, const std::string header1, const std::string header2, const std::vector<std::string> loss_) {
+//
+//    this->count = 0;
+//    this->count_max = count_max_;
+//    this->length = 0;
+//    this->loss = loss_;
+//
+//    std::stringstream ss;
+//    ss << header1 << " " << header2 << " ";
+//    std::cout << ss.str() << std::flush;
+//    this->header = ss.str().length();
+//
+//    this->loss_sum = std::vector<float>(this->loss.size(), 0.0);
+//    this->loss_ave = std::vector<float>(this->loss.size(), 0.0);
+//    this->start = std::chrono::system_clock::now();
+//
+//}
 
 
 // -------------------------------------------------------------
@@ -127,19 +125,30 @@ void progress::display::increment(const std::vector<float> loss_value) {
     // (1) Count Up Epochs
     this->count++;
 
-    // (2) Initialization of Terminal Line
+    // (2) Initialize Terminal Line
     initialize = std::string(this->length, '\b') + std::string(this->length, ' ') + std::string(this->length, '\b');
 
-    // (3) Get Left String
+    // (3) Get Left String - Output various metrics
     left_str = "";
     for (i = 0; i < this->loss.size(); i++) {
         this->loss_sum.at(i) += loss_value.at(i);
         this->loss_ave.at(i) = this->loss_sum.at(i) / (float)this->count;
         ss.str(""); ss.clear(std::stringstream::goodbit);
-        ss << this->loss.at(i) << ":" << loss_value.at(i);
-        ss << "(ave:" << this->loss_ave.at(i) << ") ";
+
+        // If you want to show different decimal places for each metric name, add a condition here
+        if (this->loss.at(i) == "lr" || this->loss.at(i) == "learning_rate") {
+            ss << this->loss.at(i) << ":" << std::scientific << std::setprecision(3) << loss_value.at(i);
+        }
+        else {
+            ss << this->loss.at(i) << ":" << std::scientific << std::setprecision(3) << loss_value.at(i);
+            ss << "(ave:" << std::scientific << std::setprecision(3) << this->loss_ave.at(i) << ") ";
+        }
+
         left_str += ss.str();
     }
+    // Reset scientific flag
+    ss.unsetf(std::ios_base::floatfield);
+
     ss.str(""); ss.clear(std::stringstream::goodbit);
     percent = (int)((float)this->count / (float)this->count_max * 100.0f);
     ss << std::right << std::setw(4) << percent;
@@ -191,7 +200,7 @@ void progress::display::increment(const std::vector<float> loss_value) {
     ss << "[" << elap_min_str << ":" << elap_sec_str << "<" << rem_min_str << ":" << rem_sec_str << ", " << sec_per_iter_str << "s/it]";
     right_str = ss.str();
 
-    // (6) Catch Terminal Size
+    // (6) Get Terminal Size
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     ideal_length = 0;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
@@ -218,6 +227,7 @@ void progress::display::increment(const std::vector<float> loss_value) {
     return;
 
 }
+
 
 
 // -------------------------------------------------------------

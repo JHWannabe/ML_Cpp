@@ -384,21 +384,21 @@ void transforms::CenterCropImpl::forward(cv::Mat& data_in, cv::Mat& data_out) {
     int crop_width = this->size.width;
     int crop_height = this->size.height;
 
-    // 이미지 크기
+    // Image size
     int width = data_in.cols;
     int height = data_in.rows;
 
-    // 자를 크기보다 원본 이미지가 작은 경우, 원본 이미지를 그대로 사용
+    // If the original image is smaller than the crop size, use the original image as is
     if (width < crop_width || height < crop_height) {
         data_in.copyTo(data_out);
         return;
     }
 
-    // 이미지의 중심을 기준으로 crop
+    // Crop based on the center of the image
     int x_start = (width - crop_width) / 2;
     int y_start = (height - crop_height) / 2;
 
-    // 해당 영역을 crop
+    // Crop the specified region
     cv::Rect roi(x_start, y_start, crop_width, crop_height);
     data_out = data_in(roi);
     return;
